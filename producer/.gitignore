@@ -1,0 +1,16 @@
+/RUNNING_PID
+/logs/
+/project/*-shim.sbt
+/project/project/
+/project/target/
+/target/
+/build
+/lib_managed
+/*/**/*.sc
+
+# SBT Dockerfile-image generated
+.ivy2
+.sbt
+.bash_history
+.scala_history
+.ssh
