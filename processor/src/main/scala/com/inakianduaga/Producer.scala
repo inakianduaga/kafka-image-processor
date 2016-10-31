@@ -1,15 +1,14 @@
 package com.inakianduaga
 
-import cakesolutions.kafka.{ KafkaProducer, KafkaProducerRecord }
+import cakesolutions.kafka.{KafkaProducer, KafkaProducerRecord}
 import cakesolutions.kafka.KafkaProducer.Conf
 import org.apache.kafka.common.serialization.StringSerializer
 
-
-class Producer {
+class Processor {
 
 }
 
-object Producer {
+object Processor {
 
   val producer = KafkaProducer(
     Conf(new StringSerializer(), new StringSerializer(), bootstrapServers = "localhost:9092")

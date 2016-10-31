@@ -8,7 +8,6 @@
 /build
 /lib_managed
 /*/**/*.sc
-.sbtserver
 
 # SBT Dockerfile-image generated
 .ivy2

@@ -1,0 +1,61 @@
+{
+  "name": "cyclejs-spreadsheet",
+  "description": "A toy app to learn cyclejs / reactive programming",
+  "version": "0.0.1",
+  "homepage": "https://github.com/inakianduaga/cyclejs-spreadsheet",
+  "private": false,
+  "author": {
+    "name": "Inaki Anduaga",
+    "email": "inaki@inakianduaga.com",
+    "url": "www.inakianduaga.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/inakianduaga/cyclejs-spreadsheet"
+  },
+  "bugs": {
+    "url": "https://github.com/inakianduaga/cyclejs-spreadsheet/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/inakianduaga/cyclejs-spreadsheet/blob/master/LICENSE"
+    }
+  ],
+  "dependencies": {
+    "@cycle/dom": "^12.2.5",
+    "@cycle/xstream-run": "^3.1.0",
+    "xstream": "^6.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.45",
+    "@types/react": "^0.14.41",
+    "awesome-typescript-loader": "^2.2.4",
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.5",
+    "babel-plugin-syntax-jsx": "^6.13.0",
+    "babel-plugin-transform-react-jsx": "^6.8.0",
+    "babel-preset-es2015": "^6.16.0",
+    "css-loader": "^0.25.0",
+    "cycle-restart": "0.0.14",
+    "font-loader": "^0.1.2",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "postcss": "^5.2.4",
+    "postcss-loader": "^0.13.0",
+    "rimraf": "^2.5.4",
+    "snabbdom-jsx": "^0.3.1",
+    "tslint": "^3.15.1",
+    "tslint-loader": "^2.1.5",
+    "typescript": "^2.0.3",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.16.2"
+  },
+  "scripts": {
+    "start": "node ./node_modules/.bin/webpack-dev-server --hot --inline",
+    "clean": "rimraf build",
+    "build:webpack": "NODE_ENV=production node ./node_modules/webpack/bin/webpack.js --config webpack.prod.js --progress --colors --bail",
+    "build": "npm run clean && npm run build:webpack && npm run build:testSuite",
+    "shrinkwrap": "npm prune && rm -f npm-shrinkwrap.json && npm shrinkwrap --dev"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "noFallthroughCasesInSwitch": true,
+    // "noUnusedLocals": true, // Disable because of the snabdom requires
+    "allowUnusedLabels": false,
+    "noUnusedParameters": true,
+    "module": "commonjs",
+    "jsx": "preserve",
+    "target": "es2015",
+    "outDir": "lib/",
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "formatCodeOptions": {
+    "indentSize": 2,
+    "tabSize": 2
+  },
+  "files": [
+    "src/index.ts"
+  ],
+  "awesomeTypescriptLoaderOptions" : {
+    "useBabel": true,
+    "useCache": true
+  }
+}
