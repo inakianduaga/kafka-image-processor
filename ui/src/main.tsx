@@ -18,34 +18,27 @@ export default function Main(sources: Sources): Sinks {
       .DOM
       .select('#freqSelect')
       .events('change')
-      .startWith( new CustomEvent('change', {
-        detail: defaultFrequency
-      }));
+      .map(event => (event.target as HTMLInputElement).value)
+      .startWith( `${defaultFrequency}` );
 
-  const imageFrequencyControl$ = frequencySelection$.map((event: any) => {
-    const value = event.detail || (event.target && event.target.value);
-    return (
-        <div className="col col-xs-12">
-          <div className="well">
-            <h4>Choose Image Frequency</h4>
-            <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ value } />
-            <label>
-              { value }
-            </label>
-          </div>
-        </div>
-    );
-  });
+  const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
+    <div className="col col-xs-12">
+      <div className="well">
+        <h4>Choose Image Frequency</h4>
+        <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ frequency } />
+        <label>
+          { frequency }
+        </label>
+      </div>
+    </div>
+  );
 
   const randomImageUrl = (): string => {
     const random = Math.floor(Math.random() * (1000 - 0 + 1)) + 0;
     return `https://unsplash.it/150/150?image=${random}`;
   };
 
-  const imageClock$ = frequencySelection$.map((event: any) => {
-    const value = event.detail || (event.target && event.target.value);
-    return xs.periodic(value * 1000)
-  }).flatten();
+  const imageClock$ = frequencySelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
   const imageUrls$ = imageClock$.map(() => randomImageUrl());
 
