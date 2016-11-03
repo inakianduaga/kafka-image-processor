@@ -1,8 +1,8 @@
 {
-  "name": "cyclejs-spreadsheet",
-  "description": "A toy app to learn cyclejs / reactive programming",
+  "name": "kafka-image-processor",
+  "description": "A toy app to learn kafka / reactive architectures",
   "version": "0.0.1",
-  "homepage": "https://github.com/inakianduaga/cyclejs-spreadsheet",
+  "homepage": "https://github.com/inakianduaga/kafka-image-processor",
   "private": false,
   "author": {
     "name": "Inaki Anduaga",
@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/inakianduaga/cyclejs-spreadsheet"
+    "url": "https://github.com/inakianduaga/kafka-image-processor"
   },
   "bugs": {
-    "url": "https://github.com/inakianduaga/cyclejs-spreadsheet/issues"
+    "url": "https://github.com/inakianduaga/kafka-image-processor/issues"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/inakianduaga/cyclejs-spreadsheet/blob/master/LICENSE"
+      "url": "https://github.com/inakianduaga/kafka-image-processor/blob/master/LICENSE"
     }
   ],
   "dependencies": {

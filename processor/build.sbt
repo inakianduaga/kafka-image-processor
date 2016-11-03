@@ -1,4 +1,4 @@
-name := """kafka-playground-processor"""
+name := """kafka-image-processor"""
 
 version := "0.1"
 
