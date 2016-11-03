@@ -25,6 +25,7 @@
   "dependencies": {
     "@cycle/dom": "^12.2.5",
     "@cycle/xstream-run": "^3.1.0",
+    "cycle-socket.io": "^3.0.1",
     "xstream": "^6.4.1"
   },
   "devDependencies": {

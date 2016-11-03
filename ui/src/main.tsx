@@ -5,9 +5,11 @@ const { html } = require('snabbdom-jsx');
 
 export type Sources = {
   DOM: DOMSource,
+  WEBSOCKET: Stream<VNode>,
 };
 export type Sinks = {
   DOM: Stream<VNode>,
+  WEBSOCKET: Stream<any>,
 }
 
 export default function Main(sources: Sources): Sinks {
@@ -63,27 +65,34 @@ export default function Main(sources: Sources): Sinks {
       </div>
   );
 
-  // TODO: USE a websocket driver to push messages through the websocket
-  // imageProcessRequest = $imageUrls$.map(url => ({
-  //   url,
-  //   method: 'POST'
-  // }));
+  // Websocket stats
+  const stats$ = sources.WEBSOCKET
+      .startWith('no message yet');
 
+  const statsBlocks$ = stats$.map(stats =>
+      <div className="col col-xs-12">
+          <h4>Processing stats</h4>
+          <div>
+              { stats }
+          </div>
+      </div>
+  );
 
   const vdom$ = xs
-      .combine(imageFrequencyControl$, imageGallery$)
-      .map(([imageFrequencyControl, imageGallery]) =>
+      .combine(imageFrequencyControl$, imageGallery$, statsBlocks$)
+      .map(([imageFrequencyControl, imageGallery, statsBlocks]) =>
       <div className="container-fluid">
         <div className="row">
           { imageFrequencyControl }
           { imageGallery }
+          { statsBlocks }
         </div>
       </div>
   );
 
-
   return {
-    DOM: vdom$
+    DOM: vdom$,
+    WEBSOCKET: imageUrls$, // send image url request through the websocket
   };
 
 }
