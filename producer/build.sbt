@@ -20,4 +20,4 @@ resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.co
 resolvers += Resolver.bintrayRepo("cakesolutions", "maven")
 libraryDependencies += "net.cakesolutions" %% "scala-kafka-client" % "0.10.0.0"
 
-fork in run := true
+fork in run := false

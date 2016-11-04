@@ -50,4 +50,5 @@ services:
     entrypoint:
       - sbt
       - run
+    stdin_open: true
 
