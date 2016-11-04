@@ -3,6 +3,7 @@
 /logs/
 /project/*-shim.sbt
 /project/project/
+/project/.sbtserver
 /project/target/
 /target/
 /build

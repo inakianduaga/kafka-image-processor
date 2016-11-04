@@ -53,7 +53,7 @@
     "webpack-dev-server": "^1.16.2"
   },
   "scripts": {
-    "start": "node ./node_modules/.bin/webpack-dev-server --hot --inline",
+    "start": "node ./node_modules/.bin/webpack-dev-server --hot --inline --port 3000 --host=0.0.0.0",
     "clean": "rimraf build",
     "build:webpack": "NODE_ENV=production node ./node_modules/webpack/bin/webpack.js --config webpack.prod.js --progress --colors --bail",
     "build": "npm run clean && npm run build:webpack && npm run build:testSuite",
