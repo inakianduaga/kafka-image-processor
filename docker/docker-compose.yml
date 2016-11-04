@@ -44,7 +44,7 @@ services:
     depends_on:
       - kafka
     volumes:
-      - ../producer:/root
+      - ../ui-backend:/root
     environment:
       - KAFKA_ENDPOINT=kafka:9092
     entrypoint:

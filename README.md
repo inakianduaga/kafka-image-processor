@@ -21,7 +21,7 @@ and additional backends doing processing over the Kafka streams
 
 - Scala Play backend that connects to the client via websockets and receives processing requests from it. 
 - Forwards data to Kafka to be processed by another backend. So it behaves as a *Kafka producer*
-- [More details](./producer)
+- [More details](./ui-backend)
    
 #### Image processor backend
 
