@@ -4,6 +4,7 @@ import akka.actor._
 import play.api.libs.concurrent.Akka._
 import play.api.libs.json.JsValue
 import play.api.mvc.{ AnyContent, Request}
+import play.api.Play.current
 
 class WebSocketActor(out: ActorRef) extends Actor {
 
@@ -19,6 +20,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
 }
 
 object WebSocketActor {
+
   def push(actorPath: String, payload: JsValue) =  system.actorSelection(actorPath) ! payload
   def props(out: ActorRef) = Props(new WebSocketActor(out))
 }
