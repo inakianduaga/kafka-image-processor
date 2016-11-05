@@ -5,7 +5,9 @@ import makeWebSocketDriver from './drivers/websocket';
 
 const main = Main;
 
-run(main, {
+const drivers = {
   DOM: makeDOMDriver('#app'),
-  WEBSOCKET: makeWebSocketDriver(process.env.BACKEND_ENDPOINT),
-});
+  ws: makeWebSocketDriver(process.env.BACKEND_ENDPOINT),
+};
+
+run(main, drivers);

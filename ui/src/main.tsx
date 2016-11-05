@@ -13,7 +13,7 @@ export type Sinks = {
 }
 
 const defaultFrequency = 3;
-const maxUploadImages = 5;
+const maxUploadImages = 3;
 const imageSize = 100;
 
 export default function Main(sources: Sources): Sinks {
