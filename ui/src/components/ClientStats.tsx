@@ -3,11 +3,11 @@ import {VNode} from '@cycle/dom';
 const {html} = require('snabbdom-jsx');
 import Config from '../services/Config';
 
-type ISources = {
+export type ISources = {
   imageUrls$: Stream<string>,
 };
 
-type ISinks = {
+export type ISinks = {
   DOM: Stream<VNode>,
 }
 

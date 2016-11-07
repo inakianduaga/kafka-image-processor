@@ -1,36 +1,34 @@
-import xs, {Stream, MemoryStream} from 'xstream';
-import {VNode, CycleDOMEvent} from '@cycle/dom';
+import xs, {Stream} from 'xstream';
+import {VNode} from '@cycle/dom';
 import {DOMSource} from '@cycle/dom/xstream-typings';
 const {html} = require('snabbdom-jsx');
 
 import ImageGallery from './components/ImageGallery';
 import ClientStats from './components/ClientStats';
 import FrequencyControl from './components/FrequencyControl';
+import ServerResults from './components/ServerResults';
 
-export type Sources = {
+export type ISources = {
   DOM: DOMSource,
-  WEBSOCKET: Stream<VNode>,
+  WEBSOCKET: Stream<any>,
 };
-export type Sinks = {
+export type ISinks = {
   DOM: Stream<VNode>,
   WEBSOCKET: Stream<any>,
 }
 
-export default function Main({DOM, WEBSOCKET}: Sources): Sinks {
+export default function Main({DOM, WEBSOCKET}: ISources): ISinks {
 
   const { DOM: imageFrequencyControl$, CLOCK: imageClock$} = FrequencyControl({DOM});
   const { DOM: imageGallery$, IMAGE_URLS: imageUrls$ } = ImageGallery({imageClock$});
   const { DOM: clientStats$} = ClientStats({imageUrls$});
-
-  // Websocket stats
-  const serverResults$ = WEBSOCKET
-    .startWith('no message yet');
+  const { DOM: serverResults$ } = ServerResults({WEBSOCKET});
 
   const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify(url));
 
   const vdom$ = xs
-    .combine(imageFrequencyControl$, imageGallery$, clientStats$)
-    .map(([imageFrequencyControl, imageGallery, clientStats]) =>
+    .combine(imageFrequencyControl$, imageGallery$, clientStats$, serverResults$)
+    .map(([imageFrequencyControl, imageGallery, clientStats, serverResults]) =>
       <div className="container-fluid">
         <div className="row">
           <div className="col-xs-6 col-md-6">
@@ -41,7 +39,7 @@ export default function Main({DOM, WEBSOCKET}: Sources): Sinks {
             </div>
           </div>
           <div className="col-xs-6 col-md-6">
-            HERE GO SERVER SIDE RESULTS
+            { serverResults }
           </div>
         </div>
       </div>
