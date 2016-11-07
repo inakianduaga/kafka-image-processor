@@ -3,6 +3,10 @@ import {VNode, CycleDOMEvent} from '@cycle/dom';
 import {DOMSource} from '@cycle/dom/xstream-typings';
 const {html} = require('snabbdom-jsx');
 
+import ImageGallery from './components/ImageGallery';
+import ClientStats from './components/ClientStats';
+import FrequencyControl from './components/FrequencyControl';
+
 export type Sources = {
   DOM: DOMSource,
   WEBSOCKET: Stream<VNode>,
@@ -12,87 +16,17 @@ export type Sinks = {
   WEBSOCKET: Stream<any>,
 }
 
-const defaultFrequency = 3;
-const maxUploadImages = 3;
-const imageSize = 100;
+export default function Main({DOM, WEBSOCKET}: Sources): Sinks {
 
-export default function Main(sources: Sources): Sinks {
-
-  const frequencySelection$ = sources
-    .DOM
-    .select('#freqSelect')
-    .events('change')
-    .map(event => (event.target as HTMLInputElement).value)
-    .startWith(`${defaultFrequency}`);
-
-  const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
-    <div className="col col-xs-12">
-      <div className="well">
-        <h4>Image Upload Frequency</h4>
-        <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ frequency }/>
-        <label>
-          every { frequency }s
-        </label>
-      </div>
-    </div>
-  );
-
-  const randomImageUrl = (): string => {
-    const random = Math.floor(Math.random() * (1000 - 0 + 1)) + 0;
-    return `https://unsplash.it/${imageSize}/${imageSize}?image=${random}`;
-  };
-
-  const imageClock$ = frequencySelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
-
-  const imageClockCapped$ = imageClock$.take(maxUploadImages);
-
-  const imageUrls$ = imageClockCapped$.map(() => randomImageUrl());
-
-  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify(url));
-
-  const cumulativeImageUrls$ = imageUrls$.fold((acc: string[], url: string) => acc.push(url) && acc, []);
-
-  const imageTags$ = cumulativeImageUrls$.map((urls: string[]) =>
-    <div>
-      {
-        urls.map(url =>
-          <img src={url} style={{ border: "1px solid #ddd" }} height={imageSize} width={imageSize}/>
-        )
-      }
-    </div>
-  );
-
-  const imageGallery$ = imageTags$.map(tags =>
-    <div className="col col-xs-12">
-      <h4>Image Stream...</h4>
-      <div>
-        { tags }
-      </div>
-    </div>
-  );
+  const { DOM: imageFrequencyControl$, CLOCK: imageClock$} = FrequencyControl({DOM});
+  const { DOM: imageGallery$, IMAGE_URLS: imageUrls$ } = ImageGallery({imageClock$});
+  const { DOM: clientStats$} = ClientStats({imageUrls$});
 
   // Websocket stats
-  const serverResults$ = sources.WEBSOCKET
+  const serverResults$ = WEBSOCKET
     .startWith('no message yet');
 
-  // Client stats
-  const uploadCount$ = imageUrls$.fold((count) => count + 1, 0);
-  const uploadPercentage$ = uploadCount$.map(count => 100 * count / maxUploadImages);
-
-  const clientStats$ = xs.combine(uploadCount$, uploadPercentage$)
-    .map(([uploadCount, uploadPercentage]) =>
-      <div className="col col-xs-12">
-        <h4>Processing stats</h4>
-        <div className="row">
-          <div className="col-xs-12 col-md-6">
-            <h5>Client uploads</h5>
-            <p>
-              { uploadCount } / { maxUploadImages } | { uploadPercentage}%
-            </p>
-          </div>
-        </div>
-      </div>
-  );
+  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify(url));
 
   const vdom$ = xs
     .combine(imageFrequencyControl$, imageGallery$, clientStats$)
