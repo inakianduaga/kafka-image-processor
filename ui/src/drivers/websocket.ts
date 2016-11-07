@@ -12,15 +12,23 @@ export type ICycleJSTwoWayDriver = (outgoing$: Stream<Event>) => Stream<any>;
  */
 function makeWebSocketDriver(hostnameAndPort: string): ICycleJSTwoWayDriver {
 
-  let ws = new WebSocket(`ws://${hostnameAndPort}`);
-  console.log(ws);
-  ws.send({init:'done, testing123'});
+  const ws = new WebSocket(`ws://${hostnameAndPort}`);
+  const queue: Event[] = [];
+
+  // When the websocket connection opens, fire all queued messages
+  ws.onopen = () => queue.forEach(out => ws.send(out));
 
   return (outgoing$: Stream<Event>) => {
 
     // Register event listener on input stream that will push it through the websocket
     outgoing$.addListener({
-      next: outgoing => ws.send(outgoing),
+      next: outgoing => {
+        if(ws.readyState === 1) {
+          ws.send(outgoing);
+        } else {
+          queue.push(outgoing);
+        }
+      },
       error: () => {},
       complete: () => {},
     });
@@ -31,6 +39,7 @@ function makeWebSocketDriver(hostnameAndPort: string): ICycleJSTwoWayDriver {
       start: listener => {
         ws.onmessage = (msg: MessageEvent) => listener.next(msg);
         ws.onerror = (err: Event) => listener.error(err);
+        ws.onclose = () => listener.complete();
       },
       stop: () => {
       },

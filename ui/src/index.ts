@@ -7,7 +7,7 @@ const main = Main;
 
 const drivers = {
   DOM: makeDOMDriver('#app'),
-  ws: makeWebSocketDriver(process.env.BACKEND_ENDPOINT),
+  WEBSOCKET: makeWebSocketDriver(process.env.BACKEND_ENDPOINT),
 };
 
 run(main, drivers);

@@ -48,6 +48,8 @@ export default function Main(sources: Sources): Sinks {
 
   const imageUrls$ = imageClockCapped$.map(() => randomImageUrl());
 
+  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify(url));
+
   const cumulativeImageUrls$ = imageUrls$.fold((acc: string[], url: string) => acc.push(url) && acc, []);
 
   const imageTags$ = cumulativeImageUrls$.map((urls: string[]) =>
@@ -113,7 +115,7 @@ export default function Main(sources: Sources): Sinks {
 
   return {
     DOM: vdom$,
-    WEBSOCKET: imageUrls$, // send image url request through the websocket
+    WEBSOCKET: imageUrlsJsoned$, // send image url request through the websocket
   };
 
 }
