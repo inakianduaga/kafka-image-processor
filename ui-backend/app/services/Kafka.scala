@@ -1,9 +1,17 @@
 package services
 
-import com.google.inject.Singleton
+import cakesolutions.kafka.{KafkaProducer, KafkaProducerRecord}
+import cakesolutions.kafka.KafkaProducer.Conf
+import org.apache.kafka.common.serialization.StringSerializer
+
+import com.google.inject.{Singleton, Inject}
 
 @Singleton
-class Kafka() {
+class Kafka @Inject() (configuration: play.api.Configuration) {
+
+  val producer = KafkaProducer(
+    Conf(new StringSerializer(), new StringSerializer(), bootstrapServers = configuration.getString("kafka.endpoint").get)
+  )
 
   // Subscribe to Kafka topics on initialization
   subscribeToKafkaTopics
