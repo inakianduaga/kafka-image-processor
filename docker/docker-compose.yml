@@ -4,6 +4,11 @@
 #
 version: '2'
 services:
+
+  #===============
+  # Core Services
+  #===============
+
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -33,18 +38,6 @@ services:
       - zookeeper
       - kafka
     depends_on:
-      - kafka
-      - zookeeper
-  schema-registry-rest-proxy:
-    image: confluent/rest-proxy
-    ports:
-      - 8082:8082
-    links:
-      - zookeeper
-      - kafka
-      - schema-registry
-    depends_on:
-      - schema-registry
       - kafka
       - zookeeper
   ui:
@@ -78,4 +71,49 @@ services:
       - sbt
       - run
     stdin_open: true
+
+  # =============
+  # Rest proxies
+  # =============
+
+  schema-registry-rest-proxy:
+    image: confluent/rest-proxy
+    ports:
+      - 8082:8082
+    links:
+      - zookeeper
+      - kafka
+      - schema-registry
+    depends_on:
+      - schema-registry
+      - kafka
+      - zookeeper
+
+  # ================
+  # UI visualization
+  # ================
+
+  schema-registry-ui:
+    image: landoop/schema-registry-ui
+    ports:
+      - 8083:8000
+    environment:
+      - SCHEMAREGISTRY_URL=http://localhost:8081
+    links:
+      - schema-registry
+    depends_on:
+      - schema-registry
+
+#  kafka-topics-ui:
+#    image: landoop/kafka-topics-ui
+#    ports:
+#      - 8084:8000
+#    environment:
+#      - KAFKA_REST_PROXY_URL=kafka-rest-proxy
+#      - PROXY=true
+#    links:
+#      - kafka-rest-proxy
+#    depends_on:
+#      - kafka-rest-proxy
+
 
