@@ -4,6 +4,8 @@ import cakesolutions.kafka.{KafkaProducer, KafkaProducerRecord}
 import cakesolutions.kafka.KafkaProducer.Conf
 import org.apache.kafka.common.serialization.StringSerializer
 import com.google.inject.{Inject, Singleton}
+import Kafka._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class Kafka @Inject() (configuration: play.api.Configuration) {
@@ -26,6 +28,8 @@ class Kafka @Inject() (configuration: play.api.Configuration) {
   // Test producer
   send("http://www.some.com")
 
+  // HACK: Save instance into object companion for retrieving it without needing dependency injection
+  Kafka.setInstance(this)
 }
 
 object Kafka {
@@ -38,11 +42,11 @@ object Kafka {
 //  def send(value: String) = producer.send(KafkaProducerRecord(topic="Images.Urls", key=None, value))
 //    .foreach(record => s"Pushed record to kafka: ${record.toString}")
 
-  var kafkaInstance: Kafka
+  var kafkaInstance: Option[Kafka] = None
 
   def setInstance(instance: Kafka) = {
-    kafkaInstance = instance
+    kafkaInstance = Some(instance)
   }
 
-  def getInstance() = kafkaInstance
+  def getInstance() = kafkaInstance.get
 }

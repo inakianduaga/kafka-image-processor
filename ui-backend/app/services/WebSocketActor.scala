@@ -5,7 +5,7 @@ import play.api.libs.concurrent.Akka._
 import play.api.libs.json._
 import play.api.Play.current
 import DataTypes.ImageUrl
-import com.google.inject._
+import Kafka.getInstance
 
 class WebSocketActor (out: ActorRef) extends Actor {
 
@@ -17,7 +17,8 @@ class WebSocketActor (out: ActorRef) extends Actor {
     // Catch all messages as generic Json and handle parsing of different potential types inside
     case msg: JsValue =>
       Json.fromJson(msg)(Json.reads[ImageUrl]).foreach(image => {
-        kafka.send(image.url)
+        println(s"received ${image.url}")
+        getInstance().send(image.url)
       })
     case _ =>
       println(s"Uncaught message type")
