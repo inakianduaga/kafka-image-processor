@@ -8,7 +8,7 @@ type ISources = {
   DOM: DOMSource,
 };
 
-type ISinks = {
+export type ISinks = {
   DOM: Stream<VNode>,
   CLOCK: Stream<number>
 }

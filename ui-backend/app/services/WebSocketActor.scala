@@ -2,25 +2,30 @@ package services
 
 import akka.actor._
 import play.api.libs.concurrent.Akka._
-import play.api.libs.json.JsValue
+import play.api.libs.json._
 import play.api.Play.current
+import DataTypes.ImageUrl
+import com.google.inject._
 
-class WebSocketActor(out: ActorRef) extends Actor {
+class WebSocketActor (out: ActorRef) extends Actor {
 
   val actorPath = out.path.toString
 
   def receive = {
     case msg: String =>
       println(msg)
+    // Catch all messages as generic Json and handle parsing of different potential types inside
     case msg: JsValue =>
-      // TODO: Hook webSocket to Kafka stream so we can push whatever we get from the webSocket upstream
-      println(s"Message: $msg for webSocketId: $actorPath)")
+      Json.fromJson(msg)(Json.reads[ImageUrl]).foreach(image => {
+        kafka.send(image.url)
+      })
+    case _ =>
+      println(s"Uncaught message type")
   }
 
 }
 
 object WebSocketActor {
-
   def push(actorPath: String, payload: JsValue) =  system.actorSelection(actorPath) ! payload
   def props(out: ActorRef) = Props(new WebSocketActor(out))
 }

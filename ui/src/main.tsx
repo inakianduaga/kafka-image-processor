@@ -24,7 +24,7 @@ export default function Main({DOM, WEBSOCKET}: ISources): ISinks {
   const { DOM: clientStats$} = ClientStats({imageUrls$});
   const { DOM: serverResults$ } = ServerResults({WEBSOCKET});
 
-  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify(url));
+  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify({url: url}));
 
   const vdom$ = xs
     .combine(imageFrequencyControl$, imageGallery$, clientStats$, serverResults$)
