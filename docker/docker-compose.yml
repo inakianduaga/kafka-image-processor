@@ -13,6 +13,7 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - "2181:2181"
+
   kafka:
     image: wurstmeister/kafka:latest
     ports:
@@ -25,6 +26,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - zookeeper
+
   schema-registry:
     image: confluent/schema-registry
     ports:
@@ -42,6 +44,11 @@ services:
     depends_on:
       - kafka
       - zookeeper
+
+  #===============
+  # Applications
+  #===============
+
   ui:
     build: ./node
     image: node
@@ -56,6 +63,7 @@ services:
     entrypoint:
       - npm
       - start
+
   ui-backend:
     ports:
       - "9000:9000"
@@ -67,6 +75,24 @@ services:
       - kafka
     volumes:
       - ../ui-backend:/root
+    environment:
+      - KAFKA_ENDPOINT=kafka:9092
+    entrypoint:
+      - sbt
+      - run
+    stdin_open: true
+
+  processor:
+    ports:
+      - "9000:9000"
+    build: ./sbt
+    image: sbt
+    links:
+      - kafka
+    depends_on:
+      - kafka
+    volumes:
+      - ../processor:/root
     environment:
       - KAFKA_ENDPOINT=kafka:9092
     entrypoint:
@@ -92,7 +118,7 @@ services:
       - zookeeper
 
   # ================
-  # UI visualization
+  # Debugging UI visualization
   # ================
 
   schema-registry-ui:
