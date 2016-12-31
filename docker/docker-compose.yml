@@ -28,10 +28,12 @@ services:
   schema-registry:
     image: confluent/schema-registry
     ports:
-      - 8081
+      - 8081:8081
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema_registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+      SCHEMA_REGISTRY_access_control_allow_methods: 'GET,POST,OPTIONS'
+      SCHEMA_REGISTRY_access_control_allow_origin: '*'
     expose:
       - 8081
     links:
@@ -76,7 +78,7 @@ services:
   # Rest proxies
   # =============
 
-  schema-registry-rest-proxy:
+  kafka-rest-proxy:
     image: confluent/rest-proxy
     ports:
       - 8082:8082
@@ -104,16 +106,16 @@ services:
     depends_on:
       - schema-registry
 
-#  kafka-topics-ui:
-#    image: landoop/kafka-topics-ui
-#    ports:
-#      - 8084:8000
-#    environment:
-#      - KAFKA_REST_PROXY_URL=kafka-rest-proxy
-#      - PROXY=true
-#    links:
-#      - kafka-rest-proxy
-#    depends_on:
-#      - kafka-rest-proxy
+  kafka-topics-ui:
+    image: landoop/kafka-topics-ui
+    ports:
+      - 8084:8000
+    environment:
+      - KAFKA_REST_PROXY_URL=http://kafka-rest-proxy:8082
+      - PROXY=true
+    links:
+      - kafka-rest-proxy
+    depends_on:
+      - kafka-rest-proxy
 
 

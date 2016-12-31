@@ -23,10 +23,11 @@ class Kafka @Inject() (configuration: play.api.Configuration) {
   }
 
   def send(value: String) = producer.send(KafkaProducerRecord(topic="Images.Urls", key=None, value))
-    .foreach(record => s"Pushed record to kafka: ${record.toString}")
 
   // Test producer
-  send("http://www.some.com")
+  send("http://www.some.com").onSuccess {
+    case t => println(s"Sent successfully ${t.timestamp}")
+  }
 
   // HACK: Save instance into object companion for retrieving it without needing dependency injection
   Kafka.setInstance(this)
