@@ -14,6 +14,9 @@ class Kafka {
 
 object Kafka {
 
+  def main(args:Array[String]): Unit = {
+  }
+
   val producer = KafkaProducer(
     Conf(new StringSerializer(), new StringSerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
   )
@@ -27,6 +30,8 @@ object Kafka {
     )
   )
 
+  println("Setting up kafka bindings")
+  
   // Subscribe to urls topic
   consumer.subscribe(List("Images.Urls").asJava)
 
