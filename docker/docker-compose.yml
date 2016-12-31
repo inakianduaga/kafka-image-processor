@@ -83,8 +83,6 @@ services:
     stdin_open: true
 
   processor:
-    ports:
-      - "9000:9000"
     build: ./sbt
     image: sbt
     links:
