@@ -7,6 +7,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import scala.util.Properties
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import java.util.concurrent.CountDownLatch
 
 class Kafka {
 
@@ -40,4 +41,8 @@ object Kafka {
   urls.foreach(record => println(s"Read image url: ${record.value}"))
 
   println("registered listeners")
+
+  // Keep main thread alive indefinitely
+  val keepAlive = new CountDownLatch(1)
+  keepAlive.await()
 }
