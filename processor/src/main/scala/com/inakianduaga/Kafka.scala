@@ -32,15 +32,19 @@ object Kafka {
   )
 
   println("Setting up kafka bindings")
+
+  println(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
   
   // Subscribe to urls topic
   consumer.subscribe(List("Images.Urls").asJava)
 
-  // Fetch records
-  val urls = consumer.poll(30.seconds.toMillis).asScala
-  urls.foreach(record => println(s"Read image url: ${record.value}"))
-
-  println("registered listeners")
+  // Fetch records continuously
+  while(true) {
+    val records = consumer.poll(2000).asScala
+    println("fetching...")
+    print(s"number: ${records.size}")
+    records.foreach(record => println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset()))
+  }
 
   // Keep main thread alive indefinitely
   val keepAlive = new CountDownLatch(1)

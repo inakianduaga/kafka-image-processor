@@ -6,6 +6,7 @@ import play.api.libs.json._
 import play.api.Play.current
 import DataTypes.ImageUrl
 import Kafka.getInstance
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class WebSocketActor (out: ActorRef) extends Actor {
 
@@ -18,7 +19,7 @@ class WebSocketActor (out: ActorRef) extends Actor {
     case msg: JsValue =>
       Json.fromJson(msg)(Json.reads[ImageUrl]).foreach(image => {
         println(s"received ${image.url}")
-        getInstance().send(image.url)
+        getInstance().send(image.url).foreach(sent => println(s"Pushed url to kafka on ${sent.timestamp}"))
       })
     case _ =>
       println(s"Uncaught message type")
