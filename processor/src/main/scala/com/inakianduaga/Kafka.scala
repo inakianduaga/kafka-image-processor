@@ -1,7 +1,10 @@
 package com.inakianduaga
 
-import cakesolutions.kafka.{KafkaProducer, KafkaProducerRecord, KafkaConsumer}
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import java.util.{ Properties => JavaProperties}
+import cakesolutions.kafka.{KafkaProducer, KafkaProducerRecord}
 import cakesolutions.kafka.KafkaProducer.Conf
+
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import scala.util.Properties
@@ -18,17 +21,18 @@ object Kafka {
   def main(args:Array[String]): Unit = {
   }
 
+  val consumer = {
+    val props = new JavaProperties()
+    props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+    props.put("group.id", "kafka-image-processor-consumer-group")
+    props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+    props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+
+    new KafkaConsumer[String, String](props)
+  }
+
   val producer = KafkaProducer(
     Conf(new StringSerializer(), new StringSerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-  )
-
-  val consumer = KafkaConsumer(
-    KafkaConsumer.Conf(
-      new StringDeserializer(),
-      new StringDeserializer(),
-      bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"),
-      "kafka-image-processor-consumer-group"
-    )
   )
 
   println("Setting up kafka bindings")
@@ -40,13 +44,14 @@ object Kafka {
 
   // Fetch records continuously
   while(true) {
-    val records = consumer.poll(2000).asScala
-    println("fetching...")
-    print(s"number: ${records.size}")
+    val records = consumer.poll(1000).asScala
     records.foreach(record => println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset()))
   }
 
   // Keep main thread alive indefinitely
   val keepAlive = new CountDownLatch(1)
   keepAlive.await()
+
 }
+
+
