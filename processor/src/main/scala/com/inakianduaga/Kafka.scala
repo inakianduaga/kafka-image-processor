@@ -15,8 +15,8 @@ import scala.collection.JavaConverters._
 import java.util.concurrent.CountDownLatch
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import com.sksamuel.{scrimage => ImgLib}
-
 
 class Kafka {
 }
@@ -26,26 +26,28 @@ object Kafka {
   def main(args:Array[String]): Unit = {
   }
 
+  urlToBinaryProcessor()
+  applyFilterProcessor()
+
   // Keep main thread alive indefinitely
   val keepAlive = new CountDownLatch(1)
   keepAlive.await()
 
-  urlToBinaryProcessor()
-  applyFilterProcessor()
-
   def urlToBinaryProcessor() = {
 
     val producer = KafkaProducer(
-      Conf(new StringSerializer(), new ByteArraySerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      Conf(new StringSerializer(), new ByteArraySerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "kafka:9092"))
     )
 
     def send(value: Array[Byte]) = producer.send(KafkaProducerRecord(topic="Images.Binaries", key=None, value))
+    println("testing sending some bytes")
+    send("123".getBytes)
 
     val consumer = {
       val config: JavaProperties = {
         val props = new JavaProperties()
         props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-        props.put("group.id", "kafka-image-processor-consumer-group-1")
+        props.put("group.id", "kafka-image-url-processor-consumer-group")
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
 
@@ -62,7 +64,7 @@ object Kafka {
 
       imgUrlsRecords
         .map(imageUrlRecord => httpGet(imageUrlRecord.value))
-        .map(futureResponse => futureResponse.map(
+        .foreach(futureResponse => futureResponse.foreach(
           response => response.status match {
             case 200 => send(response.bodyAsBytes)
             case _ => println(s"Failed to download - Status ${response.status}" )
@@ -84,7 +86,7 @@ object Kafka {
       val config: JavaProperties = {
         val props = new JavaProperties()
         props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-        props.put("group.id", "kafka-image-processor-consumer-group-1")
+        props.put("group.id", "kafka-image-binary-processor-consumer-group")
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
         props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer")
         props
@@ -96,10 +98,10 @@ object Kafka {
     consumer.subscribe(List("Images.Binaries").asJava)
 
     val producer = KafkaProducer(
-      Conf(new StringSerializer(), new ByteArraySerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      Conf(new StringSerializer(), new ByteArraySerializer(), bootstrapServers = Properties.envOrElse("KAFKA_ENDPOINT", "kafka:9092"))
     )
 
-    def send(value: Array[Byte]) = producer.send(KafkaProducerRecord(topic="Images.Urls", key=None, value))
+    def send(value: Array[Byte]) = producer.send(KafkaProducerRecord(topic="Images.Processed", key=None, value))
 
     // Fetch records continuously
     while(true) {
