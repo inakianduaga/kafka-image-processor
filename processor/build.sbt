@@ -9,9 +9,13 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 // Scala kafka client
 resolvers += Resolver.bintrayRepo("cakesolutions", "maven")
-libraryDependencies += "net.cakesolutions" %% "scala-kafka-client" % "0.10.0.0"
-libraryDependencies += "org.apache.kafka" % "kafka-clients" % "0.10.1.1"
-libraryDependencies += "org.apache.kafka" % "kafka-streams" % "0.10.1.1"
+libraryDependencies += "net.cakesolutions" %% "scala-kafka-client" % "0.10.0.0" exclude("org.slf4j","slf4j-log4j12")
+libraryDependencies += "org.apache.kafka" % "kafka-clients" % "0.10.1.1" exclude("org.slf4j","slf4j-log4j12")
+libraryDependencies += "org.apache.kafka" % "kafka-streams" % "0.10.1.1" exclude("org.slf4j","slf4j-log4j12")
+
+//libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-jdk14", "slf4j-log4j12")) }
+//excludeDependencies += "org.slf4j" % "slf4j-jdk14"
+//excludeDependencies += "org.log4j" % "log4j"
 
 // Play HTTP standalone client
 libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.4.3"

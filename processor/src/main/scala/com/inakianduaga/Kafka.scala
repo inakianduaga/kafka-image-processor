@@ -160,7 +160,8 @@ object Kafka {
     val config: StreamsConfig = {
       val props = new JavaProperties()
       props.put("BOOTSTRAP_SERVERS_CONFIG", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      props.put("APPLICATION_ID_CONFIG", "kafka-image-binary-processor")
+      props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      props.put("application.id", "kafka-image-binary-processor")
       new StreamsConfig(props)
     }
 
