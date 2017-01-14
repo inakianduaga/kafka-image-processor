@@ -9,9 +9,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 // Scala kafka client
 resolvers += Resolver.bintrayRepo("cakesolutions", "maven")
-libraryDependencies += "net.cakesolutions" %% "scala-kafka-client" % "0.10.0.0" exclude("org.slf4j","slf4j-log4j12")
-libraryDependencies += "org.apache.kafka" % "kafka-clients" % "0.10.1.1" exclude("org.slf4j","slf4j-log4j12")
-libraryDependencies += "org.apache.kafka" % "kafka-streams" % "0.10.1.1" exclude("org.slf4j","slf4j-log4j12")
+libraryDependencies += "org.apache.kafka" % "kafka-clients" % "0.10.1.0" exclude("org.slf4j","slf4j-log4j12")
+libraryDependencies += "org.apache.kafka" % "kafka-streams" % "0.10.1.0" exclude("org.slf4j","slf4j-log4j12")
 
 //libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-jdk14", "slf4j-log4j12")) }
 //excludeDependencies += "org.slf4j" % "slf4j-jdk14"
@@ -26,6 +25,10 @@ libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-io-extra" % "2.1.0"
 libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.0"
 
 mainClass in Compile := Some("com.inakianduaga.Kafka")
+
+// Sbt revolver for autoreloading
+resolvers += "spray repo" at "http://repo.spray.io"
+mainClass in reStart := Some("com.inakianduaga.Kafka")
 
 // set the main Scala source directory to be <base>/src
 //scalaSource in Compile <<= baseDirectory(_ / "src")

@@ -20,7 +20,7 @@ services:
       - "9092:9092"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: 172.17.0.1
-      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1, Images.Urls:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -87,12 +87,17 @@ services:
     image: sbt
     links:
       - kafka
+      - zookeeper
     depends_on:
       - kafka
+      - zookeeper
+      - schema-registry
+      - ui
     volumes:
       - ../processor:/root
     environment:
       - KAFKA_ENDPOINT=kafka:9092
+      - ZOOKEEPER_ENDPOINT=zookeeper:2181
     entrypoint:
       - sbt
       - run
