@@ -62,10 +62,10 @@ object Kafka {
 
     val config: StreamsConfig = {
       val props = new JavaProperties()
-      props.put("ZOOKEEPER_CONNECT_CONFIG", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-      props.put("zookeeper.connect.config", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-      props.put("zookeeper.connect", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-      props.put("ZOOKEEPER_CONNECT", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
+//      props.put("ZOOKEEPER_CONNECT_CONFIG", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
+//      props.put("zookeeper.connect.config", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
+//      props.put("zookeeper.connect", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
+//      props.put("ZOOKEEPER_CONNECT", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
 
       props.put("BOOTSTRAP_SERVERS_CONFIG", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
       props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
