@@ -19,10 +19,12 @@ import com.sksamuel.{scrimage => ImgLib}
 // Kafka streams import
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsConfig
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.processor.TopologyBuilder
 import org.apache.kafka.streams.processor.Processor
 import org.apache.kafka.streams.processor.ProcessorContext
 import org.apache.kafka.streams.processor.ProcessorSupplier
+
 
 class Kafka {
 }
@@ -39,6 +41,18 @@ object Kafka {
 
     def process(key: K, value: V) = {
       println(s"Stream - Dummy processor received value: $value")
+
+      httpGet(value.asInstanceOf[String])
+        .foreach(
+          response => response.status match {
+            case 200 => {
+              println(s"downloaded image url, ready to push binary ${response.body.size}")
+//              send(response.bodyAsBytes)
+            }
+            case _ => println(s"Failed to download - Status ${response.status}" )
+          }
+        )
+
     }
 
     def punctuate(timestamp: Long) = {}
@@ -51,7 +65,6 @@ object Kafka {
   }
 
   def urlToBinaryProcessorUsingStreams() = {
-
     val builder: TopologyBuilder = new TopologyBuilder()
     val processorSupplier = new UrlProcessorSupplierBuilder[String, String]()
 
@@ -62,20 +75,17 @@ object Kafka {
 
     val config: StreamsConfig = {
       val props = new JavaProperties()
-//      props.put("ZOOKEEPER_CONNECT_CONFIG", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-//      props.put("zookeeper.connect.config", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-//      props.put("zookeeper.connect", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-//      props.put("ZOOKEEPER_CONNECT", Properties.envOrElse("ZOOKEEPER_ENDPOINT", "localhost:2181"))
-
-      props.put("BOOTSTRAP_SERVERS_CONFIG", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      props.put("bootstrap.servers", Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      props.put("application.id", "kafka-image-binary-processor")
+      props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      props.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-image-binary-processor")
+      // Default serde for keys of data records (here: built-in serde for String type)
+      props.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass.getName)
+      // Default serde for keys of data records (here: built-in serde for String type)
+      props.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass.getName)
       new StreamsConfig(props)
     }
 
     val streams: KafkaStreams = new KafkaStreams(builder, config)
 
-    // Start the Kafka Streams threads
     streams.start()
   }
 
