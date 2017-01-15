@@ -37,8 +37,14 @@ object Kafka {
 
   class UrlProcessor[K, V] extends (Processor[K, V]) {
 
-    def init(context: ProcessorContext) = {}
+    var context: Option[ProcessorContext] = None
 
+    @Override
+    def init(context: ProcessorContext) = {
+      this.context = Some(context)
+    }
+
+    @Override
     def process(key: K, value: V) = {
       println(s"Stream - Dummy processor received value: $value")
 
@@ -48,6 +54,9 @@ object Kafka {
             case 200 => {
               println(s"downloaded image url, ready to push binary ${response.body.size}")
 //              send(response.bodyAsBytes)
+              // Forwards a key/value pair to the downstream processors
+              context.get.forward("123", "234")
+              context.get.commit()
             }
             case _ => println(s"Failed to download - Status ${response.status}" )
           }
@@ -55,8 +64,10 @@ object Kafka {
 
     }
 
+    @Override
     def punctuate(timestamp: Long) = {}
 
+    @Override
     def close() = {}
   }
 
@@ -69,9 +80,10 @@ object Kafka {
     val processorSupplier = new UrlProcessorSupplierBuilder[String, String]()
 
     builder
-      .addSource("Source", "Images.Urls")
-      .addProcessor("Process", processorSupplier, "Source")
       .setApplicationId("kafka-image-binary-processor")
+      .addSource("Source", "Images.Urls")
+      .addProcessor("DownloadImages", processorSupplier, "Source")
+      .addSink("ImageBinaries", "Images.Binaries", Serdes.String().serializer(), Serdes.ByteArray().serializer(), "DownloadImages")
 
     val config: StreamsConfig = {
       val props = new JavaProperties()
