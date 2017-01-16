@@ -7,14 +7,8 @@ scalaVersion := "2.11.7"
 // Change this to another test framework if you prefer
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
-// Scala kafka client
-resolvers += Resolver.bintrayRepo("cakesolutions", "maven")
-libraryDependencies += "org.apache.kafka" % "kafka-clients" % "0.10.1.0" exclude("org.slf4j","slf4j-log4j12")
-libraryDependencies += "org.apache.kafka" % "kafka-streams" % "0.10.1.0" exclude("org.slf4j","slf4j-log4j12")
-
-//libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-jdk14", "slf4j-log4j12")) }
-//excludeDependencies += "org.slf4j" % "slf4j-jdk14"
-//excludeDependencies += "org.log4j" % "log4j"
+// Scala kafka
+libraryDependencies += "com.typesafe.akka" %% "akka-stream-kafka" % "0.13"
 
 // Play HTTP standalone client
 libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.4.3"
