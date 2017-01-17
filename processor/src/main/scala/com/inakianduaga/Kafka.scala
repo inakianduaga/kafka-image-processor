@@ -41,10 +41,9 @@ object Kafka {
       .withGroupId("kafka-image-binary-processor")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
       .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
-      .withProperty("POLL_INTERVAL", "1000ms")
-      .withProperty("poll.interval", "1000ms")
 
     val producerSettings = ProducerSettings(system, new StringSerializer(), new StringSerializer())
+      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
 
     val imageUrls$ = Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
     val imageCommitableOffsets$ = imageUrls$.map(message => message.committableOffset)
