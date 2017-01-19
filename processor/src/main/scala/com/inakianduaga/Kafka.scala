@@ -11,7 +11,7 @@ import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeser
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 
 import scala.util.Properties
-import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.{ RunnableGraph, Flow, Source, Sink}
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ConsumerSettings, ConsumerMessage, ProducerMessage, ProducerSettings, Subscriptions}
@@ -56,9 +56,10 @@ object Kafka {
       .map(imgBytes => new ByteArrayInputStream(imgBytes))
       .map(imgInputStream => ImgLib.Image.fromStream(imgInputStream))
       .map(image => image.filter(ImgLib.filter.GrayscaleFilter))
+//      .log("filteredImages Log", image => image.toString())
 
     // Convert images into new topic producer records & hook with producer
-    imageUrls$
+    filteredImages$
       .map(image => new ProducerRecord[String, String]("Images.Filtered", image.toString))
       .zip(imageCommitableOffsets$)
       .map { case (producerRecord, offset) => ProducerMessage.Message(producerRecord, offset)}
