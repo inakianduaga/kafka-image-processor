@@ -7,19 +7,22 @@ import com.inakianduaga.services.HttpClient.{get => httpGet}
 import com.sksamuel.{scrimage => ImgLib}
 import java.io.ByteArrayInputStream
 
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
-import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
+import akka.NotUsed
+import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer, StringDeserializer, StringSerializer}
 
 import scala.util.Properties
-import akka.stream.scaladsl.{ RunnableGraph, Flow, Source, Sink}
+import akka.stream.scaladsl.{Flow, RunnableGraph, Sink, Source}
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Producer
-import akka.kafka.{ConsumerSettings, ConsumerMessage, ProducerMessage, ProducerSettings, Subscriptions}
+import akka.kafka.{ConsumerMessage, ConsumerSettings, ProducerMessage, ProducerSettings, Subscriptions}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
 import akka.actor.ActorSystem
+import akka.kafka.ConsumerMessage.CommittableMessage
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer.ProducerRecord
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class Kafka {
 }
@@ -53,17 +56,35 @@ object Kafka {
       .mapAsync(1)(message => httpGet(message.record.value()))
       .filter(response => response.status == 200)
       .map(response => response.bodyAsBytes)
+            .map(response => {
+              println(s"IMAGE DOWNLOADED RESPONSE: ${response.length}")
+              response
+            })
       .map(imgBytes => new ByteArrayInputStream(imgBytes))
-      .map(imgInputStream => ImgLib.Image.fromStream(imgInputStream))
-      .map(image => image.filter(ImgLib.filter.GrayscaleFilter))
-//      .log("filteredImages Log", image => image.toString())
+      .map(imgInputStream => {
+        println("BEFORE READING FROM STREAM")
+        ImgLib.Image.fromStream(imgInputStream)
+      })
+      .map(image => {
+        println("BEFORE APPLYING FILTER")
+        image.filter(ImgLib.filter.GrayscaleFilter)
+      })
+      .map(image => {
+        println(s"CONVERTED IMAGE TO GREYSCALE, LENGTH: ${image.bytes.length}")
+        image
+      })
 
     // Convert images into new topic producer records & hook with producer
     filteredImages$
-      .map(image => new ProducerRecord[String, String]("Images.Filtered", image.toString))
+      .map(image => new ProducerRecord[String, String]("Images.Filtered", image.bytes.toString))
       .zip(imageCommitableOffsets$)
       .map { case (producerRecord, offset) => ProducerMessage.Message(producerRecord, offset)}
       .runWith(Producer.commitableSink(producerSettings))
+      .onFailure {
+        case x: Throwable => println(s"Exception Caught: ${x.getMessage}")
+        case _ => println(s"Exception Caught - GENERIC")
+      }
+
   }
 
 }
