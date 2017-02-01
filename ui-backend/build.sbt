@@ -17,7 +17,6 @@ libraryDependencies ++= Seq(
 resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
 
 // Scala kafka client
-resolvers += Resolver.bintrayRepo("cakesolutions", "maven")
-libraryDependencies += "net.cakesolutions" %% "scala-kafka-client" % "0.10.0.0"
+libraryDependencies += "com.typesafe.akka" %% "akka-stream-kafka" % "0.13"
 
 fork in run := false
