@@ -1,14 +1,17 @@
 package services
 
 import akka.actor.ActorSystem
-import akka.kafka.ProducerSettings
+import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.ConfigFactory
-import org.apache.kafka.common.serialization.StringSerializer
+import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
 import org.apache.kafka.clients.producer.ProducerRecord
-import akka.kafka.scaladsl.Producer
+import akka.kafka.scaladsl.{Consumer, Producer}
+import akka.stream.scaladsl.{Sink, Source}
+import org.apache.kafka.clients.consumer.ConsumerConfig
+
 import scala.util.Properties
 
 @Singleton
@@ -25,8 +28,17 @@ class Kafka @Inject() (configuration: play.api.Configuration) {
   subscribeToKafkaTopics()
 
   def subscribeToKafkaTopics() = {
+
+    val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
+      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      .withGroupId("kafka-processed-image-reader")
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+
     // TODO: Add subscription to Kafka topics here to read processed images, which we will then push to actors
-    println("Here go Kafka topic subscriptions")
+    Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Filtered"))
+      .map(message => println(s"Received filtered message w/ value ${message.record.value()}"))
+      .runWith(Sink.ignore)
   }
 
   def send(value: String) = Source.single(new ProducerRecord[String, String]("Images.Urls", value))
