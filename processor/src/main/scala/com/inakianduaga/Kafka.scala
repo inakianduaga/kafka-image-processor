@@ -48,16 +48,7 @@ object Kafka {
     val producerSettings = ProducerSettings(system, new StringSerializer(), new StringSerializer())
       .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
 
-    val imageUrls$ = Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-    val imageCommitableOffsets$ = imageUrls$.map(message => message.committableOffset)
-
-    imageCommitableOffsets$.runWith(Sink.ignore).onFailure {
-      case x: Throwable => println(s"Exception Caught: ${x.getMessage}")
-      case _ => println(s"Exception Caught - GENERIC")
-    }
-
-    // Download & Filter URL Stream
-    imageUrls$
+    Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
       .mapAsync(1)(message => httpGet(message.record.value()).map(response => (message.committableOffset, response)))
       .filter(response => response._2.status == 200)
       .map(response => (response._1, response._2.bodyAsBytes))
