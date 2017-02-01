@@ -51,6 +51,11 @@ object Kafka {
     val imageUrls$ = Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
     val imageCommitableOffsets$ = imageUrls$.map(message => message.committableOffset)
 
+    imageCommitableOffsets$.runWith(Sink.ignore).onFailure {
+      case x: Throwable => println(s"Exception Caught: ${x.getMessage}")
+      case _ => println(s"Exception Caught - GENERIC")
+    }
+
     // Download & Filter URL Stream
     val filteredImages$ = imageUrls$
       .mapAsync(1)(message => httpGet(message.record.value()))
@@ -73,10 +78,11 @@ object Kafka {
         println(s"CONVERTED IMAGE TO GREYSCALE, LENGTH: ${image.bytes.length}")
         image
       })
-
-    // Convert images into new topic producer records & hook with producer
-    filteredImages$
-      .map(image => new ProducerRecord[String, String]("Images.Filtered", image.bytes.toString))
+      // Convert images into new topic producer records & hook with producer
+      .map(image => {
+        println(s"RUN FIRST CHING OF PRODUCER RECORD")
+        new ProducerRecord[String, String]("Images.Filtered", image.bytes.toString)
+      })
       .zip(imageCommitableOffsets$)
       .map { case (producerRecord, offset) => ProducerMessage.Message(producerRecord, offset)}
       .runWith(Producer.commitableSink(producerSettings))

@@ -8,7 +8,7 @@ export type ISources = {
 };
 
 export type ISinks = {
-  DOM: Stream<VNode>,
+  DOM: Stream<any>,
 }
 
 const ClientStats = ({imageUrls$}: ISources): ISinks => {

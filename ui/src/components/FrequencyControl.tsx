@@ -9,7 +9,7 @@ type ISources = {
 };
 
 export type ISinks = {
-  DOM: Stream<VNode>,
+  DOM: Stream<JSX.Element>,
   CLOCK: Stream<number>
 }
 

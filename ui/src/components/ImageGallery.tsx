@@ -8,7 +8,7 @@ type ISources = {
 };
 
 type ISinks = {
-  DOM: Stream<VNode>,
+  DOM: Stream<any>,
   IMAGE_URLS: Stream<string>,
 };
 

@@ -13,7 +13,7 @@ export type ISources = {
   WEBSOCKET: Stream<any>,
 };
 export type ISinks = {
-  DOM: Stream<VNode>,
+  DOM: Stream<any>,
   WEBSOCKET: Stream<any>,
 }
 

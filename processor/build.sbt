@@ -21,8 +21,8 @@ libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.0"
 mainClass in Compile := Some("com.inakianduaga.Kafka")
 
 // Sbt revolver for autoreloading
-resolvers += "spray repo" at "http://repo.spray.io"
-mainClass in reStart := Some("com.inakianduaga.Kafka")
+//resolvers += "spray repo" at "http://repo.spray.io"
+//mainClass in reStart := Some("com.inakianduaga.Kafka")
 
 // set the main Scala source directory to be <base>/src
 //scalaSource in Compile <<= baseDirectory(_ / "src")
