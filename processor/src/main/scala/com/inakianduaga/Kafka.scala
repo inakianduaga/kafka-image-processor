@@ -57,39 +57,16 @@ object Kafka {
     }
 
     // Download & Filter URL Stream
-    val filteredImages$ = imageUrls$
-      .mapAsync(1)(message => httpGet(message.record.value()))
-      .filter(response => response.status == 200)
-      .map(response => response.bodyAsBytes)
-            .map(response => {
-              println(s"IMAGE DOWNLOADED RESPONSE: ${response.length}")
-              response
-            })
-      .map(imgBytes => new ByteArrayInputStream(imgBytes))
-      .map(imgInputStream => {
-        println("BEFORE READING FROM STREAM")
-        ImgLib.Image.fromStream(imgInputStream)
-      })
-      .map(image => {
-        println("BEFORE APPLYING FILTER")
-        image.filter(ImgLib.filter.GrayscaleFilter)
-      })
-      .map(image => {
-        println(s"CONVERTED IMAGE TO GREYSCALE, LENGTH: ${image.bytes.length}")
-        image
-      })
-      // Convert images into new topic producer records & hook with producer
-      .map(image => {
-        println(s"RUN FIRST CHING OF PRODUCER RECORD")
-        new ProducerRecord[String, String]("Images.Filtered", image.bytes.toString)
-      })
-      .zip(imageCommitableOffsets$)
-      .map { case (producerRecord, offset) => ProducerMessage.Message(producerRecord, offset)}
+    imageUrls$
+      .mapAsync(1)(message => httpGet(message.record.value()).map(response => (message.committableOffset, response)))
+      .filter(response => response._2.status == 200)
+      .map(response => (response._1, response._2.bodyAsBytes))
+      .map(imgBytes => (imgBytes._1, new ByteArrayInputStream(imgBytes._2)))
+      .map(imgInputStream => (imgInputStream._1, ImgLib.Image.fromStream(imgInputStream._2)))
+      .map(image => (image._1, image._2.filter(ImgLib.filter.GrayscaleFilter)))
+      .map(image => (image._1, new ProducerRecord[String, String]("Images.Filtered", image._2.bytes.toString)))
+      .map { pair => ProducerMessage.Message(pair._2, pair._1)}
       .runWith(Producer.commitableSink(producerSettings))
-      .onFailure {
-        case x: Throwable => println(s"Exception Caught: ${x.getMessage}")
-        case _ => println(s"Exception Caught - GENERIC")
-      }
 
   }
 
