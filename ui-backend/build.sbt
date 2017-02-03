@@ -15,8 +15,16 @@ libraryDependencies ++= Seq(
 
 // https://github.com/sbt/sbt/issues/2054
 resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
+resolvers += "confluent" at "http://packages.confluent.io/maven/"
 
 // Scala kafka client
 libraryDependencies += "com.typesafe.akka" %% "akka-stream-kafka" % "0.13"
+libraryDependencies += "com.julianpeeters" %% "avrohugger-core" % "0.13.0"
+
+// Avro serializer/deserializer
+libraryDependencies += "io.confluent" % "kafka-avro-serializer" % "3.1.2"
+
+// Add AvroHugger tasks
+sbtavrohugger.SbtAvrohugger.avroSettings
 
 fork in run := false
