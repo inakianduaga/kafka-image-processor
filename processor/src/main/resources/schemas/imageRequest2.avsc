@@ -1,0 +1,27 @@
+{
+  "namespace": "inakianduaga.kafkaImageProcessor",
+  "type": "record",
+  "name": "ImageRequest",
+  "doc": "Image processing request",
+  "fields": [
+    {
+      "name": "downloadUrl",
+      "type": "string",
+      "doc": "The image location",
+      "aliases": [
+        "url"
+      ]
+    },
+    {
+      "name": "filter",
+      "type": "enum",
+      "doc": "The filter to apply to this image",
+      "symbols": [
+        "GREYSCALE",
+        "INVERTED",
+        "RAINBOW"
+      ],
+      "default": "GREYSCALE"
+    }
+  ]
+}

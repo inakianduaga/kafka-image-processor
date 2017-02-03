@@ -3,7 +3,7 @@ package DataTypes
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData.Record
 
-case class ImageRequest2(url: String, filter: FilterName) extends AvroRecordConvertible {
+case class ImageRequest2(url: String, filter: Filter) extends AvroRecordConvertible {
   def toAvroRecord(avroSchema: Schema): Record = {
     val avroRecord = new Record(avroSchema)
     avroRecord.put("url", url)
@@ -12,16 +12,16 @@ case class ImageRequest2(url: String, filter: FilterName) extends AvroRecordConv
   }
 }
 
-sealed trait FilterName {
+sealed trait Filter {
   val name: String
 }
-case object FilterGreyscale extends FilterName {
+case object FilterGreyscale extends Filter {
   val name = "GREYSCALE"
 }
-case object FilterInverted extends FilterName {
-  val name = "INVERTED"
+case object FilterChrome extends Filter {
+  val name = "CHROME"
 }
 
-case object FilterRainbow extends FilterName {
-  val name = "RAINBOW"
+case object FilterHalftone extends Filter {
+  val name = "HALFTONE"
 }

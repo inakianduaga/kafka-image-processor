@@ -2,6 +2,9 @@
 # Docker Compose to wire up all containers for local development
 # https://docs.docker.com/compose/compose-file/
 #
+# Based on the confluent platform:
+# https://github.com/confluentinc/cp-docker-images/blob/3.1.x/examples/cp-all-in-one/docker-compose.yml
+#
 ---
 version: '2'
 services:
@@ -48,7 +51,7 @@ services:
       SCHEMA_REGISTRY_access_control_allow_methods: 'GET,POST,OPTIONS'
       SCHEMA_REGISTRY_access_control_allow_origin: '*'
       # Additional options:
-      # SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL=none
+      # SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL=NONE | FULL | FORWARD | BACKWARD
 
   #===============
   # Applications
@@ -95,6 +98,7 @@ services:
     links:
       - broker
       - zookeeper
+      - schema-registry
     depends_on:
       - broker
       - zookeeper
@@ -104,6 +108,7 @@ services:
       - ../processor:/root
     environment:
       - KAFKA_ENDPOINT=broker:9092
+      - SCHEMA_REGISTRY_ENDPOINT=schema-registry:8081
       - ZOOKEEPER_ENDPOINT=zookeeper:2181
     entrypoint:
       - sbt
