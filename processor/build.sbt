@@ -20,6 +20,10 @@ libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.0"
 
 mainClass in Compile := Some("com.inakianduaga.Kafka")
 
+// Avro serializer/deserializer
+resolvers += "confluent" at "http://packages.confluent.io/maven/"
+libraryDependencies += "io.confluent" % "kafka-avro-serializer" % "3.1.2"
+
 // Sbt revolver for autoreloading
 //resolvers += "spray repo" at "http://repo.spray.io"
 //mainClass in reStart := Some("com.inakianduaga.Kafka")

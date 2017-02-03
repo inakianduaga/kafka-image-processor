@@ -55,14 +55,15 @@ class Kafka @Inject() (configuration: play.api.Configuration, environment: Envir
     val schema: Schema = new Schema.Parser().parse(schemaFile)
 
     // Avro serializer (uses schema)
-    val schemaRegistryClient = new CachedSchemaRegistryClient("http://hostname:8181",1000)
+    val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
+    val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
     val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
 
     // kafka producer settings that uses with Akka Stream Kafka
     val producerSettings =
       ProducerSettings(system, avroSerializer, avroSerializer)
         .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-        .withProperty("schema.registry.url", Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081"))
+        .withProperty("schema.registry.url", schemaRegistryEndpoint)
 
     Source.single(new ProducerRecord[Object, Object]("Images.Urls", recordData.toAvroRecord(schema)))
       .runWith(Producer.plainSink(producerSettings))

@@ -19,8 +19,8 @@ class WebSocketActor (out: ActorRef) extends Actor {
     case msg: JsValue =>
       Json.fromJson(msg)(Json.reads[ImageRequest]).foreach(image => {
         println(s"received ${image.url}")
-        // Send regular url
-        getInstance().send(image.url).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url}") }
+//        // Send regular url
+//        getInstance().send(image.url).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url}") }
         // Send Avro url
         getInstance().send(ImageRequest(image.url)).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url} in Avro format") }
 
