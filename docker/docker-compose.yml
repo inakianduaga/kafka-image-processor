@@ -41,12 +41,14 @@ services:
       - zookeeper
       - broker
     ports:
-      - '8081'
+      - "8081:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema_registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
       SCHEMA_REGISTRY_access_control_allow_methods: 'GET,POST,OPTIONS'
       SCHEMA_REGISTRY_access_control_allow_origin: '*'
+      # Additional options:
+      # SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL=none
 
   #===============
   # Applications
