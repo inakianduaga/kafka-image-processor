@@ -4,7 +4,7 @@ import akka.actor._
 import play.api.libs.concurrent.Akka._
 import play.api.libs.json._
 import play.api.Play.current
-import DataTypes.ImageUrl
+import DataTypes.ImageRequest
 import Kafka.getInstance
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -17,9 +17,14 @@ class WebSocketActor (out: ActorRef) extends Actor {
       println(msg)
     // Catch all messages as generic Json and handle parsing of different potential types inside
     case msg: JsValue =>
-      Json.fromJson(msg)(Json.reads[ImageUrl]).foreach(image => {
+      Json.fromJson(msg)(Json.reads[ImageRequest]).foreach(image => {
         println(s"received ${image.url}")
+        // Send regular url
         getInstance().send(image.url).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url}") }
+        // Send Avro url
+        getInstance().send(ImageRequest(image.url)).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url} in Avro format") }
+
+        // TODO: Add logic to send either V1 avro or V2 avro depending on the filter
       })
     case _ =>
       println(s"Uncaught message type")
