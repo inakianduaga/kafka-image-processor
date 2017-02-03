@@ -1,3 +1,14 @@
 package DataTypes
 
-case class ImageUrl(url: String, filter: Option[String])
+import org.apache.avro.generic.GenericData.Record
+import org.apache.avro.Schema
+
+case class ImageRequest(url: String) extends AvroRecordConvertible {
+
+  def toAvroRecord(avroSchema: Schema): Record = {
+    val avroRecord = new Record(avroSchema)
+    avroRecord.put("url", url)
+    avroRecord
+  }
+
+}
