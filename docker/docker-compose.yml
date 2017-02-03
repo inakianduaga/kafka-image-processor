@@ -74,12 +74,14 @@ services:
     image: sbt
     links:
       - broker
+      - schema-registry
     depends_on:
       - broker
     volumes:
       - ../ui-backend:/root
     environment:
       - KAFKA_ENDPOINT=broker:9092
+      - SCHEMA_REGISTRY_ENDPOINT=schema-registry:8081
     entrypoint:
       - sbt
       - run
