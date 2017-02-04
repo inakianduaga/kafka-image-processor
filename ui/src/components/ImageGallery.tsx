@@ -38,7 +38,7 @@ const ImageGallery = ({imageClock$}: ISources): ISinks => {
   );
 
   const imageGallery$ = imageTags$.map(tags =>
-    <div className="col col-xs-12">
+    <div className="col col-xs-12 mb-1">
       <h4>Image Stream...</h4>
       <div>
         { tags }

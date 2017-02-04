@@ -7,6 +7,7 @@ import ImageGallery from './components/ImageGallery';
 import ClientStats from './components/ClientStats';
 import FrequencyControl from './components/FrequencyControl';
 import ServerResults from './components/ServerResults';
+import FilterSelection from './components/FilterSelection'; 
 
 export type ISources = {
   DOM: DOMSource,
@@ -23,17 +24,25 @@ export default function Main({DOM, WEBSOCKET}: ISources): ISinks {
   const { DOM: imageGallery$, IMAGE_URLS: imageUrls$ } = ImageGallery({imageClock$});
   const { DOM: clientStats$} = ClientStats({imageUrls$});
   const { DOM: serverResults$ } = ServerResults({WEBSOCKET});
+  const { DOM: filterSelectionControl$, FILTER: filter$} = FilterSelection({DOM});
 
-  const imageUrlsJsoned$ = imageUrls$.map(url => JSON.stringify({url: url}));
-
+  const imageUrlsJsoned$ = xs
+    .combine(imageUrls$, filter$)
+    .map(([url, filter]) => ({
+      url,
+      filter: filter != null ? filter : undefined
+    }))
+    .map(JSON.stringify)
+  
   const vdom$ = xs
-    .combine(imageFrequencyControl$, imageGallery$, clientStats$, serverResults$)
-    .map(([imageFrequencyControl, imageGallery, clientStats, serverResults]) =>
-      <div className="container-fluid">
+    .combine(imageFrequencyControl$, imageGallery$, clientStats$, serverResults$, filterSelectionControl$)
+    .map(([imageFrequencyControl, imageGallery, clientStats, serverResults, filterSelection]) =>
+      <div className="container-fluid p-1">
         <div className="row">
           <div className="col-xs-6 col-md-6">
             <div className="row">
               { imageFrequencyControl }
+              { filterSelection}
               { clientStats }
               { imageGallery }
             </div>

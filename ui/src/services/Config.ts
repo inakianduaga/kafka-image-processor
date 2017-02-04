@@ -3,7 +3,7 @@ export default {
     images: {
       frequency: 3,
       maxUpload: 10,
-      size: 100,
+      size: 150,
     }
   },
   websocketEndpoint: process.env.BACKEND_ENDPOINT,

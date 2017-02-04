@@ -25,10 +25,10 @@ const FrequencyControl = (sources: ISources): ISinks =>{
   const imageClock$ = frequencySelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
   const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
-    <div className="col col-xs-12">
+    <div className="col col-xs-12 mb-1">
       <div className="well">
-        <h4>Image Upload Frequency</h4>
-        <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ frequency }/>
+        <h4>Upload Frequency</h4>
+        <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ frequency } style={{ marginRight: "1em"}}/>
         <label>
           every { frequency }s
         </label>
