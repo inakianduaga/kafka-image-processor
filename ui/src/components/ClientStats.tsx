@@ -22,10 +22,10 @@ const ClientStats = ({imageUrls$}: ISources): ISinks => {
   const clientStats$ = xs.combine(uploadCount$, uploadPercentage$)
     .map(([uploadCount, uploadPercentage]) =>
       <div className="col col-xs-12 mb-1">
-        <h4>Processing stats</h4>
+        <h5>Processing stats</h5>
         <div className="row">
           <div className="col-xs-12 col-md-6">
-            <h5>Client uploads</h5>
+            <h6>Client uploads</h6>
             <p>
               { uploadCount } / { MAX_UPLOAD_IMAGES } | { uploadPercentage}%
             </p>

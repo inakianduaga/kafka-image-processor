@@ -31,19 +31,17 @@ const FrequencyControl = (sources: ISources): ISinks =>{
 
     const filterSelectionControl$ = filterSelection$.map(selected =>
         <div className="col col-xs-12 mb-1">
-            <div className="well">
-                <h4>Filter Selection</h4>
-                <select name="filterSelection" id="filterSelection">
-                    <option value={ undefined } selected={selected == null ? true : undefined } style={{ textTransform: "capitalize" }}>UNSET</option>
-                    <optgroup label="Available:">
-                        {
-                            filters.map(name => 
-                                <option value={ name } selected={name === selected ? true : undefined } style={{ textTransform: "capitalize" }}>{ name }</option>
-                            )
-                        }
-                    </optgroup>
-                </select>
-            </div>
+            <h5>Filter Selection</h5>
+            <select name="filterSelection" id="filterSelection">
+                <option value={ undefined } selected={selected == null ? true : undefined } style={{ textTransform: "capitalize" }}>UNSET</option>
+                <optgroup label="Available:">
+                    {
+                        filters.map(name => 
+                            <option value={ name } selected={name === selected ? true : undefined } style={{ textTransform: "capitalize" }}>{ name }</option>
+                        )
+                    }
+                </optgroup>
+            </select>
         </div>
     );
 

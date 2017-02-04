@@ -40,15 +40,33 @@ export default function Main({DOM, WEBSOCKET}: ISources): ISinks {
       <div className="container-fluid p-1">
         <div className="row">
           <div className="col-xs-6 col-md-6">
-            <div className="row">
-              { imageFrequencyControl }
-              { filterSelection}
-              { clientStats }
-              { imageGallery }
+            <div className="card">
+              <h3 className="card-header">Client</h3>
+              <div className="card-block">
+                <div className="row">
+                  <div className="col-xs-12 col-md-6">
+                    <div className="row">
+                      { imageFrequencyControl }
+                    </div>
+                  </div>
+                  <div className="col-xs-12 col-md-6">
+                    <div className="row">
+                      { filterSelection}
+                    </div>
+                  </div>
+                  { clientStats }
+                  { imageGallery }
+                </div>
+              </div>
             </div>
           </div>
           <div className="col-xs-6 col-md-6">
-            { serverResults }
+            <div className="card">
+              <h3 className="card-header">Backend</h3>
+              <div className="card-block">
+                { serverResults }
+              </div>
+            </div>
           </div>
         </div>
       </div>
