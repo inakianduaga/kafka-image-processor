@@ -23,17 +23,9 @@ const ProcessingControl = (sources: ISources): ISinks =>{
 
     const processing$ = clicks$.fold((acc: boolean) => !acc, false);
 
-    processing$.debug(x => console.log(x));
-
-        // .startWith(false)
-
     const processingControl$ = processing$.map(isEnabled =>
         <div className="col col-xs-12 mb-1">
-                    {
-            isEnabled ? 'Enabled ' : 'DISABLED'
-        }
-
-            {                
+            {
                 <button type="button" className={`btn btn-${ isEnabled ? 'secondary' : 'success' }`} id="processingToggle" style={{ width: "100%"}}>
                     { isEnabled ? 'Pause' : 'Start!'}
                 </button>
