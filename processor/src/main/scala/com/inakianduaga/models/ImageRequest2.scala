@@ -29,16 +29,16 @@ sealed trait Filter {
 }
 case object FilterGreyscale extends Filter {
   val name = "GREYSCALE"
-  val filter = ImgLib.filter.GrayscaleFilter
+  override val filter = ImgLib.filter.GrayscaleFilter
 }
 case object FilterChrome extends Filter {
   val name = "CHROME"
-  val filter = ImgLib.filter.ChromeFilter
+  override val filter = ImgLib.filter.ChromeFilter()
 }
 
 case object FilterHalftone extends Filter {
   val name = "HALFTONE"
-  val filter = ImgLib.filter.ColorHalftoneFilter
+  override val filter = ImgLib.filter.ColorHalftoneFilter()
 }
 
 
