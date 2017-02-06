@@ -21,8 +21,8 @@ const FrequencyControl = (sources: ISources): ISinks =>{
     .select('#freqSelect')
     .events('change')
     .map(event => (event.target as HTMLInputElement).value)
-    .map(freq => parseInt(freq))
-    .startWith(Config.defaults.images.frequency)    
+    .map(freq => parseInt(freq, 1))
+    .startWith(Config.defaults.images.frequency)
 
   const activeFilterSelection$ = xs.combine(sources.PROCESSING, frequencySelection$)
     .filter(([processing]) => processing)
@@ -31,10 +31,10 @@ const FrequencyControl = (sources: ISources): ISinks =>{
   const imageClock$ = activeFilterSelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
   const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
-    <div className="col col-xs-12 mb-1">
-      <div className="well">
+    <div className='col col-xs-12 mb-1'>
+      <div className='well'>
         <h5>Upload Frequency</h5>
-        <input type="range" name="quantity" min="1" max="5" id="freqSelect" value={ frequency } style={{ marginRight: "1em"}}/>
+        <input type='range' name='quantity' min='1' max='5' id='freqSelect' value={ frequency } style={{ marginRight: '1em'}}/>
         <label>
           every { frequency }s
         </label>
