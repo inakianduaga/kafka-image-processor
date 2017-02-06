@@ -6,6 +6,7 @@ import Config from '../services/Config';
 
 type ISources = {
   DOM: DOMSource,
+  PROCESSING: Stream<boolean>
 };
 
 export type ISinks = {
@@ -20,9 +21,14 @@ const FrequencyControl = (sources: ISources): ISinks =>{
     .select('#freqSelect')
     .events('change')
     .map(event => (event.target as HTMLInputElement).value)
-    .startWith(`${Config.defaults.images.frequency}`);
+    .map(freq => parseInt(freq))
+    .startWith(Config.defaults.images.frequency)    
 
-  const imageClock$ = frequencySelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
+  const activeFilterSelection$ = xs.combine(sources.PROCESSING, frequencySelection$)
+    .filter(([processing]) => processing)
+    .map(([processing, frequencySelection]) => frequencySelection)
+
+  const imageClock$ = activeFilterSelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
   const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
     <div className="col col-xs-12 mb-1">
