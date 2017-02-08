@@ -45,13 +45,13 @@ class Kafka @Inject() (configuration: play.api.Configuration, environment: Envir
       .runWith(Producer.plainSink(producerSettings))
   }
 
-  def send(recordData: AvroRecordConvertible): Future[Done] = {
+  def send(recordData: AvroRecordConvertible, schemaPath: String): Future[Done] = {
     import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
     import io.confluent.kafka.serializers.KafkaAvroSerializer
     import org.apache.avro.Schema
 
     // Empty Record from Avro schema
-    val schemaFile = environment.getFile("./app/schemas/imageRequest.avsc")
+    val schemaFile = environment.getFile(schemaPath)
     val schema: Schema = new Schema.Parser().parse(schemaFile)
 
     // Avro serializer (uses schema)

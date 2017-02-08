@@ -1,11 +1,13 @@
 package services
 
+import DataTypes.{ImageRequest, ImageRequest2}
 import akka.actor._
-import play.api.libs.concurrent.Akka._
-import play.api.libs.json._
 import play.api.Play.current
-import DataTypes.ImageRequest
-import Kafka.getInstance
+import play.api.libs.concurrent.Akka._
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Json, _}
+import services.Kafka.getInstance
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class WebSocketActor (out: ActorRef) extends Actor {
@@ -17,18 +19,30 @@ class WebSocketActor (out: ActorRef) extends Actor {
       println(msg)
     // Catch all messages as generic Json and handle parsing of different potential types inside
     case msg: JsValue =>
-      Json.fromJson(msg)(Json.reads[ImageRequest]).foreach(image => {
-        println(s"received ${image.url}")
-//        // Send regular url
-//        getInstance().send(image.url).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url}") }
-        // Send Avro url
-        getInstance().send(ImageRequest(image.url)).onSuccess{ case _ => println(s"Pushed url to kafka ${image.url} in Avro format") }
-
-        // TODO: Add logic to send either V1 avro or V2 avro depending on the filter
-      })
+      selectVersionFromJson(msg)
+        .fold[Unit](
+        image =>
+          getInstance()
+            .send(ImageRequest(image.get.url), "./app/schemas/imageRequest.avsc")
+            .onSuccess{ case _ => println(s"V1: Pushed url to kafka ${image.get.url} in Avro format") }
+        ,
+        image =>
+          getInstance()
+            .send(ImageRequest(image.get.url), "./app/schemas/imageRequest2.avsc")
+            .onSuccess{ case _ => println(s"V2: Pushed url & filter to kafka ${image.get.url} in Avro format") }
+        )
     case _ =>
       println(s"Uncaught message type")
   }
+
+  /**
+    * The schema version to be used based on the client JSON payload
+    */
+  private def selectVersionFromJson(msg: JsValue): Either[JsResult[ImageRequest], JsResult[ImageRequest2]] =
+    if ((msg \ "filter").asOpt[String].isEmpty)
+      Left(Json.fromJson(msg)(Json.reads[ImageRequest]))
+    else
+      Right(Json.fromJson(msg)(Json.reads[ImageRequest2]))
 
 }
 

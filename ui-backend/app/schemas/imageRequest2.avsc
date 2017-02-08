@@ -14,13 +14,16 @@
     },
     {
       "name": "filter",
-      "type": "enum",
+      "type": {
+          "type": "enum",
+          "name": "filters",
+          "symbols": [
+            "GREYSCALE",
+            "INVERTED",
+            "RAINBOW"
+          ]
+      },
       "doc": "The filter to apply to this image",
-      "symbols": [
-        "GREYSCALE",
-        "INVERTED",
-        "RAINBOW"
-      ],
       "default": "GREYSCALE"
     }
   ]
