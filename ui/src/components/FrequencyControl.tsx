@@ -24,11 +24,16 @@ const FrequencyControl = (sources: ISources): ISinks =>{
     .map(freq => parseInt(freq, 1))
     .startWith(Config.defaults.images.frequency)
 
-  const activeFilterSelection$ = xs.combine(sources.PROCESSING, frequencySelection$)
-    .filter(([processing]) => processing)
-    .map(([processing, frequencySelection]) => frequencySelection)
 
-  const imageClock$ = activeFilterSelection$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
+  const processStart$ = sources.PROCESSING.filter(enabled => enabled);
+  const processStop$ = sources.PROCESSING.filter(enabled => !enabled).drop(1);
+
+  const imageClock$ = xs.combine(processStart$, frequencySelection$)
+    .map(([processStart, frequency]) => xs.periodic(frequency * 1000))
+    .flatten()
+    .endWhen(processStop$)
+
+  // const imageClock$ = processStart$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
   const imageFrequencyControl$ = frequencySelection$.map((frequency: any) =>
     <div className='col col-xs-12 mb-1'>
