@@ -11,18 +11,3 @@ case class ImageRequest2(url: String, filter: String) extends AvroRecordConverti
     avroRecord
   }
 }
-
-//case class Filter(name: String)
-//sealed trait Filter {
-//  val name: String
-//}
-//case object FilterGreyscale extends Filter {
-//  val name = "GREYSCALE"
-//}
-//case object FilterChrome extends Filter {
-//  val name = "CHROME"
-//}
-//
-//case object FilterHalftone extends Filter {
-//  val name = "HALFTONE"
-//}

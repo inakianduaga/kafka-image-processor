@@ -63,7 +63,6 @@ class Kafka @Inject() (configuration: play.api.Configuration, environment: Envir
     val producerSettings =
       ProducerSettings(system, avroSerializer, avroSerializer)
         .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-        .withProperty("schema.registry.url", schemaRegistryEndpoint)
 
     Source.single(new ProducerRecord[Object, Object]("Images.Urls", recordData.toAvroRecord(schema)))
       .runWith(Producer.plainSink(producerSettings))

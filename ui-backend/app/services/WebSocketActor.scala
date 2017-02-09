@@ -23,12 +23,12 @@ class WebSocketActor (out: ActorRef) extends Actor {
         .fold[Unit](
         image =>
           getInstance()
-            .send(ImageRequest(image.get.url), "./app/schemas/imageRequest.avsc")
+            .send(image.get, "./app/schemas/imageRequest.avsc")
             .onSuccess{ case _ => println(s"V1: Pushed url to kafka ${image.get.url} in Avro format") }
         ,
         image =>
           getInstance()
-            .send(ImageRequest(image.get.url), "./app/schemas/imageRequest2.avsc")
+            .send(image.get, "./app/schemas/imageRequest2.avsc")
             .onSuccess{ case _ => println(s"V2: Pushed url & filter to kafka ${image.get.url} in Avro format") }
         )
     case _ =>

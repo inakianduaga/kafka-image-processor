@@ -5,11 +5,11 @@
   "doc": "Image processing request",
   "fields": [
     {
-      "name": "downloadUrl",
+      "name": "url",
       "type": "string",
       "doc": "The image location",
       "aliases": [
-        "url"
+        "downloadUrl"
       ]
     },
     {
@@ -19,8 +19,8 @@
           "name": "filters",
           "symbols": [
             "GREYSCALE",
-            "INVERTED",
-            "RAINBOW"
+            "HALFTONE",
+            "CHROME"
           ]
       },
       "doc": "The filter to apply to this image",
