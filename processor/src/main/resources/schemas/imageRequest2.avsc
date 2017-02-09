@@ -5,22 +5,25 @@
   "doc": "Image processing request",
   "fields": [
     {
-      "name": "downloadUrl",
+      "name": "url",
       "type": "string",
       "doc": "The image location",
       "aliases": [
-        "url"
+        "downloadUrl"
       ]
     },
     {
       "name": "filter",
-      "type": "enum",
+      "type": {
+          "type": "enum",
+          "name": "filters",
+          "symbols": [
+            "GREYSCALE",
+            "HALFTONE",
+            "CHROME"
+          ]
+      },
       "doc": "The filter to apply to this image",
-      "symbols": [
-        "GREYSCALE",
-        "INVERTED",
-        "RAINBOW"
-      ],
       "default": "GREYSCALE"
     }
   ]

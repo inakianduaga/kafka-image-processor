@@ -75,7 +75,7 @@ object Kafka {
     implicit val mat = ActorMaterializer()
 
     // Empty Record from Avro schema
-    val schemaFile = new File(getClass.getClassLoader.getResource("/schemas/imageRequest2.avsc").getPath)
+    val schemaFile = new File(getClass.getClassLoader.getResource("schemas/imageRequest2.avsc").getPath)
     val schema: Schema = new Schema.Parser().parse(schemaFile)
 
     // Avro serializer (uses schema)
@@ -90,7 +90,6 @@ object Kafka {
       .withGroupId("kafka-image-binary-processor")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
       .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
-
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
       .map(message => message.committableOffset -> ImageRequest2(message.record.value.asInstanceOf[IndexedRecord]))
