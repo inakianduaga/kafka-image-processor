@@ -19,6 +19,7 @@ import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
 import akka.actor.ActorSystem
 import akka.kafka.ConsumerMessage.CommittableMessage
 import akka.stream.ActorMaterializer
+import com.inakianduaga.deserializers.ImageRequestDeserializer
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -83,7 +84,8 @@ object Kafka {
     val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
     val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
 
-    val avroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient)
+    val avroDeserializer = new ImageRequestDeserializer(schemaRegistryClient)
+      .setReaderSchema(schema)
 
     val consumerSettings = ConsumerSettings(system, avroDeserializer, avroDeserializer)
       .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
