@@ -26,9 +26,10 @@ const FrequencyControl = (sources: ISources): ISinks =>{
 
 
   const processStart$ = sources.PROCESSING.filter(enabled => enabled);
-  const processStop$ = sources.PROCESSING.filter(enabled => !enabled).drop(1);
+  const processStop$ = sources.PROCESSING.filter(enabled => !enabled);
 
-  const imageClock$ = xs.combine(processStart$, frequencySelection$)
+  const imageClock$ = xs.combine(sources.PROCESSING, frequencySelection$)
+    .filter(([isEnabled, frequency]) => isEnabled )
     .map(([processStart, frequency]) => xs.periodic(frequency * 1000))
     .flatten()
     .endWhen(processStop$)

@@ -84,6 +84,12 @@ object Kafka {
     val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
     val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
 
+    // kafka producer settings that uses with Akka Stream Kafka
+    val producerSettings =
+      ProducerSettings(system, avroSerializer, avroSerializer)
+        .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+
+
     val avroDeserializer = new ImageRequestDeserializer(schemaRegistryClient)
       .setReaderSchema(schema)
 
@@ -94,21 +100,25 @@ object Kafka {
       .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-      .map(message => message.committableOffset -> ImageRequest2(message.record.value.asInstanceOf[IndexedRecord]))
-//      .mapAsync(1)(message => httpGet(message._2.url).map(response => (message._1, response)))
-//      .filter(response => response._2.status == 200)
-//      .map(response => (response._1, response._2.bodyAsBytes))
-//      .map(imgBytes => (imgBytes._1, new ByteArrayInputStream(imgBytes._2)))
-//      .map(imgInputStream => (imgInputStream._1, ImgLib.Image.fromStream(imgInputStream._2)))
-//      .map(image => (image._1, image._2.filter(ImgLib.filter.GrayscaleFilter)))
-//      .map(image => (image._1, new ProducerRecord[String, String]("Images.Filtered", image._2.bytes.toString)))
-//      .map { pair => ProducerMessage.Message(pair._2, pair._1)}
-//      .runWith(Producer.commitableSink(producerSettings))
-      .map(data => println(s"Producer: Reading record with url: ${data._2.url} & filter value: ${data._2.filter}"))
-      .runWith(Sink.ignore)
-
+      .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[IndexedRecord])))
+      .mapAsync(1)(imageRecordData =>
+        httpGet(imageRecordData.imageTransformation.url)
+          .map(response => ImageRecordData(imageRecordData.commitableOffset, response, Some(imageRecordData.imageTransformation.filter)))
+      )
+      .filter(response => response.imageTransformation.status == 200)
+      .map(response => response.copy(imageTransformation = response.imageTransformation.bodyAsBytes))
+      .map(data => data.copy(imageTransformation = new ByteArrayInputStream(data.imageTransformation)))
+      .map(data => data.copy(imageTransformation = ImgLib.Image.fromStream(data.imageTransformation)))
+      .map(data => data.copy(imageTransformation = data.imageTransformation.filter(data.filter.get.filter)))
+      .map(data => data.copy(imageTransformation = new ProducerRecord[Object, Object]("Images.Filtered", data.imageTransformation.bytes.toString)))
+      .map(data => ProducerMessage.Message(data.imageTransformation, data.commitableOffset))
+      .runWith(Producer.commitableSink(producerSettings))
+//      .map(data => println(s"Producer: Reading record with url: ${data._2.url} & filter value: ${data._2.filter}"))
+//      .runWith(Sink.ignore)
 
   }
+
+  case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageTransformation: T, filter: Option[com.inakianduaga.models.Filter] = None)
 
 }
 
