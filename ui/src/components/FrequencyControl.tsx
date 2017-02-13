@@ -21,18 +21,19 @@ const FrequencyControl = (sources: ISources): ISinks =>{
     .select('#freqSelect')
     .events('change')
     .map(event => (event.target as HTMLInputElement).value)
-    .map(freq => parseInt(freq, 1))
-    .startWith(Config.defaults.images.frequency)
-
+    .map(freq => parseInt(freq, 0))
+    .startWith(Config.defaults.images.frequency);
 
   const processStart$ = sources.PROCESSING.filter(enabled => enabled);
   const processStop$ = sources.PROCESSING.filter(enabled => !enabled);
 
-  const imageClock$ = xs.combine(sources.PROCESSING, frequencySelection$)
-    .filter(([isEnabled, frequency]) => isEnabled )
+  // This doesn't restart after pausing
+  const imageClock$ = xs
+    .combine(processStart$, frequencySelection$)
+    .debug('either process start or freq changed')
     .map(([processStart, frequency]) => xs.periodic(frequency * 1000))
     .flatten()
-    .endWhen(processStop$)
+    .endWhen(processStop$.drop(1));
 
   // const imageClock$ = processStart$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 
