@@ -1,0 +1,27 @@
+{
+  "namespace": "inakianduaga.kafkaImageProcessor",
+  "type": "record",
+  "name": "ImageProcessed",
+  "doc": "Image processing response",
+  "fields": [
+    {
+      "name": "content",
+      "type": "bytes",
+      "doc": "The processed image binary"
+    },
+    {
+      "name": "format",
+      "type": {
+        "type": "enum",
+        "name": "formats",
+        "symbols": [
+          "JPEG",
+          "PNG",
+          "GIF"
+        ]
+      },
+      "doc": "The format of the image binary",
+      "default": "JPEG"
+    }
+  ]
+}

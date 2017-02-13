@@ -20,6 +20,7 @@ import akka.actor.ActorSystem
 import akka.kafka.ConsumerMessage.CommittableMessage
 import akka.stream.ActorMaterializer
 import com.inakianduaga.deserializers.ImageRequestDeserializer
+import com.inakianduaga.models.ImageProcessed
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -71,33 +72,41 @@ object Kafka {
     import org.apache.avro.generic.IndexedRecord
     import com.inakianduaga.models.ImageRequest2
 
+    // Aktor System
     val config = ConfigFactory.load()
     implicit val system = ActorSystem.create("kafka-image-processor", config)
     implicit val mat = ActorMaterializer()
 
-    // Empty Record from Avro schema
-    val schemaFile = new File(getClass.getClassLoader.getResource("schemas/imageRequest2.avsc").getPath)
-    val schema: Schema = new Schema.Parser().parse(schemaFile)
+    // Schema registry
+    val schemaRegistryClient = {
+      val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
+      new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
+    }
 
-    // Avro serializer (uses schema)
-    val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
-    val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
-    val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
+    // Consumer
+    val readerSchema: Schema = {
+      val readerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageRequest2.avsc").getPath)
+      new Schema.Parser().parse(readerSchemaFile)
+    }
+    val consumerSettings = {
+      val avroDeserializer = new ImageRequestDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+      ConsumerSettings(system, avroDeserializer, avroDeserializer)
+        .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+        .withGroupId("kafka-image-binary-processor")
+        .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+    }
 
-    // kafka producer settings that uses with Akka Stream Kafka
-    val producerSettings =
+    // Producer
+    val writerSchema: Schema = {
+      val writerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageProcessed.avsc").getPath)
+      new Schema.Parser().parse(writerSchemaFile)
+    }
+    val producerSettings = {
+      val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
       ProducerSettings(system, avroSerializer, avroSerializer)
         .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-
-
-    val avroDeserializer = new ImageRequestDeserializer(schemaRegistryClient)
-      .setReaderSchema(schema)
-
-    val consumerSettings = ConsumerSettings(system, avroDeserializer, avroDeserializer)
-      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      .withGroupId("kafka-image-binary-processor")
-      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+    }
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
       .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[IndexedRecord])))
@@ -105,17 +114,15 @@ object Kafka {
         httpGet(imageRecordData.imageTransformation.url)
           .map(response => ImageRecordData(imageRecordData.commitableOffset, response, Some(imageRecordData.imageTransformation.filter)))
       )
-      .filter(response => response.imageTransformation.status == 200)
-      .map(response => response.copy(imageTransformation = response.imageTransformation.bodyAsBytes))
+      .filter(data => data.imageTransformation.status == 200)
+      .map(data => data.copy(imageTransformation = data.imageTransformation.bodyAsBytes))
       .map(data => data.copy(imageTransformation = new ByteArrayInputStream(data.imageTransformation)))
       .map(data => data.copy(imageTransformation = ImgLib.Image.fromStream(data.imageTransformation)))
       .map(data => data.copy(imageTransformation = data.imageTransformation.filter(data.filter.get.filter)))
-      .map(data => data.copy(imageTransformation = new ProducerRecord[Object, Object]("Images.Filtered", data.imageTransformation.bytes.toString)))
+      .map(data => data.copy(imageTransformation = ImageProcessed(data.imageTransformation.bytes, Some("JPEG"))))
+      .map(data => data.copy(imageTransformation = new ProducerRecord[Object, Object]("Images.Filtered", data.imageTransformation.toAvroRecord(writerSchema))))
       .map(data => ProducerMessage.Message(data.imageTransformation, data.commitableOffset))
       .runWith(Producer.commitableSink(producerSettings))
-//      .map(data => println(s"Producer: Reading record with url: ${data._2.url} & filter value: ${data._2.filter}"))
-//      .runWith(Sink.ignore)
-
   }
 
   case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageTransformation: T, filter: Option[com.inakianduaga.models.Filter] = None)
