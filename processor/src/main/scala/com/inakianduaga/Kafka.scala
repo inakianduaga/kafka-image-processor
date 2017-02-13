@@ -3,28 +3,23 @@ package com.inakianduaga
 
 //import org.apache.kafka.clients.consumer.KafkaConsumer
 //import java.util.{Properties => JavaProperties}
-import com.inakianduaga.services.HttpClient.{get => httpGet}
-import com.sksamuel.{scrimage => ImgLib}
 import java.io.ByteArrayInputStream
 
-import akka.NotUsed
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer, StringDeserializer, StringSerializer}
-
-import scala.util.Properties
-import akka.stream.scaladsl.{Flow, RunnableGraph, Sink, Source}
-import akka.kafka.scaladsl.Consumer
-import akka.kafka.scaladsl.Producer
-import akka.kafka._
-import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
 import akka.actor.ActorSystem
-import akka.kafka.ConsumerMessage.CommittableMessage
+import akka.kafka._
+import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.ActorMaterializer
 import com.inakianduaga.deserializers.ImageRequestDeserializer
-import com.inakianduaga.models.ImageProcessed
+import com.inakianduaga.models.{ImageProcessed, ImageRequest2}
+import com.inakianduaga.services.HttpClient.{get => httpGet}
+import com.sksamuel.{scrimage => ImgLib}
 import com.typesafe.config.ConfigFactory
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Properties
 
 class Kafka {
 }
@@ -65,12 +60,13 @@ object Kafka {
   }
 
   def runImageProcessor = {
-    import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
-    import io.confluent.kafka.serializers.{ KafkaAvroSerializer, KafkaAvroDeserializer, KafkaAvroDeserializerConfig }
-    import org.apache.avro.Schema
     import java.io.File
-    import org.apache.avro.generic.IndexedRecord
+
     import com.inakianduaga.models.ImageRequest2
+    import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
+    import io.confluent.kafka.serializers.KafkaAvroSerializer
+    import org.apache.avro.Schema
+    import org.apache.avro.generic.IndexedRecord
 
     // Aktor System
     val config = ConfigFactory.load()
@@ -109,23 +105,23 @@ object Kafka {
     }
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-      .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[IndexedRecord])))
-      .mapAsync(1)(imageRecordData =>
-        httpGet(imageRecordData.imageTransformation.url)
-          .map(response => ImageRecordData(imageRecordData.commitableOffset, response, Some(imageRecordData.imageTransformation.filter)))
+      .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[IndexedRecord]), None))
+      .mapAsync(1)(data =>
+        httpGet(data.imageRequest.url).map(response => data.copy(holder = response))
       )
-      .filter(data => data.imageTransformation.status == 200)
-      .map(data => data.copy(imageTransformation = data.imageTransformation.bodyAsBytes))
-      .map(data => data.copy(imageTransformation = new ByteArrayInputStream(data.imageTransformation)))
-      .map(data => data.copy(imageTransformation = ImgLib.Image.fromStream(data.imageTransformation)))
-      .map(data => data.copy(imageTransformation = data.imageTransformation.filter(data.filter.get.filter)))
-      .map(data => data.copy(imageTransformation = ImageProcessed(data.imageTransformation.bytes, Some("JPEG"))))
-      .map(data => data.copy(imageTransformation = new ProducerRecord[Object, Object]("Images.Filtered", data.imageTransformation.toAvroRecord(writerSchema))))
-      .map(data => ProducerMessage.Message(data.imageTransformation, data.commitableOffset))
+      .filter(data => data.holder.status == 200)
+      .map(data => {
+        val stream = new ByteArrayInputStream(data.holder.bodyAsBytes)
+        val img = ImgLib.Image.fromStream(stream)
+        val filter = data.imageRequest.filter.filter
+        val imageProcessed = ImageProcessed(img.filter(filter).bytes, data.imageRequest.id ,Some("JPEG"))
+        val producerRecord = new ProducerRecord[Object, Object]("Images.Processed", imageProcessed.toAvroRecord(writerSchema))
+        ProducerMessage.Message(producerRecord, data.commitableOffset)
+      })
       .runWith(Producer.commitableSink(producerSettings))
   }
 
-  case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageTransformation: T, filter: Option[com.inakianduaga.models.Filter] = None)
+  case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageRequest: ImageRequest2,  holder: T)
 
 }
 

@@ -1,6 +1,6 @@
 package services
 
-import DataTypes.AvroRecordConvertible
+import DataTypes.{AvroRecordConvertible, ImageProcessed}
 import akka.Done
 import akka.actor.ActorSystem
 import akka.kafka.scaladsl.{Consumer, Producer}
@@ -9,11 +9,15 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.ConfigFactory
+import deserializers.ImageProcessedDeserializer
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
+import org.apache.avro.Schema
+import org.apache.avro.generic.IndexedRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
+import org.apache.kafka.common.serialization.StringSerializer
 import play.Environment
-
+import play.api.libs.json.Json
 import scala.concurrent.Future
 import scala.util.Properties
 
@@ -25,16 +29,35 @@ class Kafka @Inject() (configuration: play.api.Configuration, environment: Envir
 
   def subscribeToProcessedImages() = {
 
-    val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      .withGroupId("kafka-processed-image-reader")
-      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+    // Aktor System
+    val config = ConfigFactory.load()
+    implicit val system = ActorSystem.create("kafka-image-processor", config)
+    implicit val mat = ActorMaterializer()
 
-    // TODO: Add subscription to Kafka topics here to read processed images, which we will then push to actors
-    Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Filtered"))
-      .map(message => println(s"Received filtered message w/ value ${message.record.value()}"))
-      .runWith(Sink.ignore)
+    // Schema registry
+    val schemaRegistryClient = {
+      val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
+      new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
+    }
+
+    // Consumer
+    val readerSchema: Schema = {
+      val readerSchemaFile = environment.getFile("./app/schemas/imageProcessed.avsc")
+      new Schema.Parser().parse(readerSchemaFile)
+    }
+
+    val consumerSettings = {
+      val avroDeserializer = new ImageProcessedDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+      ConsumerSettings(system, avroDeserializer, avroDeserializer)
+        .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+        .withGroupId("kafka-image-binary-processor")
+        .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+    }
+
+    Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Processed"))
+      .map(message => ImageProcessed(message.record.value.asInstanceOf[IndexedRecord]))
+      .runForeach(imageProcessed => WebSocketActor.push(imageProcessed.id, Json.obj("content" -> imageProcessed.content)))
   }
 
   def send(value: String): Future[Done] = {

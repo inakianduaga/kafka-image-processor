@@ -13,6 +13,11 @@
       ]
     },
     {
+      "name": "id",
+      "type": "string",
+      "doc": "The id of this processing request"
+    },
+    {
       "name": "filter",
       "type": {
           "type": "enum",

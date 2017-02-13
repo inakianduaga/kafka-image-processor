@@ -40,9 +40,9 @@ class WebSocketActor (out: ActorRef) extends Actor {
     */
   private def selectVersionFromJson(msg: JsValue): Either[JsResult[ImageRequest], JsResult[ImageRequest2]] =
     if ((msg \ "filter").asOpt[String].isEmpty)
-      Left(Json.fromJson(msg)(Json.reads[ImageRequest]))
+      Left(Json.fromJson(msg)(Json.reads[ImageRequest]).map(_.copy(id = actorPath)))
     else
-      Right(Json.fromJson(msg)(Json.reads[ImageRequest2]))
+      Right(Json.fromJson(msg)(Json.reads[ImageRequest2]).map(_.copy(id = actorPath)))
 
 }
 

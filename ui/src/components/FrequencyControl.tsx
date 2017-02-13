@@ -30,10 +30,9 @@ const FrequencyControl = (sources: ISources): ISinks =>{
   // This doesn't restart after pausing
   const imageClock$ = xs
     .combine(processStart$, frequencySelection$)
-    .debug('either process start or freq changed')
     .map(([processStart, frequency]) => xs.periodic(frequency * 1000))
-    .flatten()
-    .endWhen(processStop$.drop(1));
+    .flatten();
+    // .endWhen(processStop$.drop(1));
 
   // const imageClock$ = processStart$.map((frequency: any) => xs.periodic(frequency * 1000)).flatten();
 

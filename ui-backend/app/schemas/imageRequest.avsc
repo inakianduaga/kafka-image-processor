@@ -8,6 +8,11 @@
       "name": "url",
       "type": "string",
       "doc": "The image location"
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "The id of this processing request"
     }
   ]
 }
