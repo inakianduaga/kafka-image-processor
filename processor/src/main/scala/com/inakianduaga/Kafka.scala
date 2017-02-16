@@ -9,7 +9,8 @@ import akka.actor.ActorSystem
 import akka.kafka._
 import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.ActorMaterializer
-import com.inakianduaga.deserializers.ImageRequestDeserializer
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
+//import com.inakianduaga.deserializers.ImageRequestDeserializer
 import com.inakianduaga.models.{ImageProcessed, ImageRequest2}
 import com.inakianduaga.services.HttpClient.{get => httpGet}
 import com.sksamuel.{scrimage => ImgLib}
@@ -85,7 +86,7 @@ object Kafka {
       new Schema.Parser().parse(readerSchemaFile)
     }
     val consumerSettings = {
-      val avroDeserializer = new ImageRequestDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+      val avroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient)
       ConsumerSettings(system, avroDeserializer, avroDeserializer)
         .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
         .withGroupId("kafka-image-binary-processor")

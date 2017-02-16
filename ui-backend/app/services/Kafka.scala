@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.ConfigFactory
-import deserializers.ImageProcessedDeserializer
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.IndexedRecord
@@ -47,7 +47,7 @@ class Kafka @Inject() (configuration: play.api.Configuration, environment: Envir
     }
 
     val consumerSettings = {
-      val avroDeserializer = new ImageProcessedDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+      val avroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient)
       ConsumerSettings(system, avroDeserializer, avroDeserializer)
         .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
         .withGroupId("kafka-image-binary-processor")
