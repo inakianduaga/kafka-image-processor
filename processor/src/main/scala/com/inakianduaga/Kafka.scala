@@ -1,125 +1,33 @@
 package com.inakianduaga
 
-
-//import org.apache.kafka.clients.consumer.KafkaConsumer
-//import java.util.{Properties => JavaProperties}
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, File}
 
 import akka.actor.ActorSystem
 import akka.kafka._
 import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.ActorMaterializer
-import io.confluent.kafka.serializers.KafkaAvroDeserializer
-//import com.inakianduaga.deserializers.ImageRequestDeserializer
+import com.inakianduaga.deserializers.ImageRequestDeserializer
 import com.inakianduaga.models.{ImageProcessed, ImageRequest2}
 import com.inakianduaga.services.HttpClient.{get => httpGet}
 import com.sksamuel.{scrimage => ImgLib}
 import com.typesafe.config.ConfigFactory
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Properties
-import scala.util.Try
-
-class Kafka {
-}
+import scala.util.{Properties, Try}
 
 object Kafka {
 
-  def main(args:Array[String]): Unit = {
-//    urlToBinaryProcessorUsingStreams
-    runImageProcessor
-  }
+  def main(args:Array[String]): Unit = run()
 
-  def urlToBinaryProcessorUsingStreams = {
-
-    val config = ConfigFactory.load()
-    implicit val system = ActorSystem.create("kafka-image-processor", config)
-    implicit val mat = ActorMaterializer()
-
-    val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-      .withGroupId("kafka-image-binary-processor")
-      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
-
-    val producerSettings = ProducerSettings(system, new StringSerializer(), new StringSerializer())
-      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-
+  def run() =
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-      .mapAsync(1)(message => httpGet(message.record.value()).map(response => (message.committableOffset, response)))
-      .filter(response => response._2.status == 200)
-      .map(response => (response._1, response._2.bodyAsBytes))
-      .map(imgBytes => (imgBytes._1, new ByteArrayInputStream(imgBytes._2)))
-      .map(imgInputStream => (imgInputStream._1, ImgLib.Image.fromStream(imgInputStream._2)))
-      .map(image => (image._1, image._2.filter(ImgLib.filter.GrayscaleFilter)))
-      .map(image => (image._1, new ProducerRecord[String, String]("Images.Filtered", image._2.bytes.toString)))
-      .map { pair => ProducerMessage.Message(pair._2, pair._1)}
-      .runWith(Producer.commitableSink(producerSettings))
-
-  }
-
-  def runImageProcessor = {
-    import java.io.File
-
-    import com.inakianduaga.models.ImageRequest2
-    import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
-    import io.confluent.kafka.serializers.KafkaAvroSerializer
-    import org.apache.avro.Schema
-    import org.apache.avro.generic.IndexedRecord
-    import org.apache.avro.generic.GenericRecord
-
-    // Actor System
-    val config = ConfigFactory.load()
-    implicit val system = ActorSystem.create("kafka-image-processor", config)
-    implicit val mat = ActorMaterializer()
-
-    // Schema registry
-    val schemaRegistryClient = {
-      val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
-      new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
-    }
-
-    // Consumer
-    val readerSchema: Schema = {
-      val readerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageRequest2.avsc").getPath)
-      new Schema.Parser().parse(readerSchemaFile)
-    }
-    val consumerSettings = {
-      val avroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient)
-      ConsumerSettings(system, avroDeserializer, avroDeserializer)
-        .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-        .withGroupId("kafka-image-binary-processor")
-        .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-        .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
-    }
-
-    // Producer
-    val writerSchema: Schema = {
-      val writerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageProcessed.avsc").getPath)
-      new Schema.Parser().parse(writerSchemaFile)
-    }
-    val producerSettings = {
-      val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
-      ProducerSettings(system, avroSerializer, avroSerializer)
-        .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
-    }
-
-    Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-        .map(message => {
-          println("received message!")
-          message
-        })
-      .map(message => {
-        val record = Try {
-          ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[GenericRecord]), None)
-        }
-
-        if(record.isFailure) println(s"Exception!: ${ record.failed.get.getMessage } || ${ record.failed.get.getStackTrace }")
-        record.get
-      })
+      .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[GenericRecord]), None))
       .mapAsync(1)(data =>
         httpGet(data.imageRequest.url).map(response => data.copy(container = response))
       )
@@ -135,11 +43,46 @@ object Kafka {
       })
       .runWith(Producer.commitableSink(producerSettings))
       .onFailure {
-        case t: Throwable => s"There was an exception: t.getMessage"
+        case t: Throwable => s"There was an exception: ${t.getMessage}"
       }
-  }
 
   case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageRequest: ImageRequest2, container: T)
+
+  implicit val actorSystem = {
+    val config = ConfigFactory.load()
+    ActorSystem.create("kafka-image-processor", config)
+  }
+  implicit val actorMaterializer = ActorMaterializer()
+
+  private val schemaRegistryClient = {
+    val schemaRegistryEndpoint = s"http://${Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081")}"
+    new CachedSchemaRegistryClient(schemaRegistryEndpoint,1000)
+  }
+
+  private val readerSchema: Schema = {
+    val readerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageRequest2.avsc").getPath)
+    new Schema.Parser().parse(readerSchemaFile)
+  }
+  private val consumerSettings = {
+    val avroDeserializer = ImageRequestDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+    ConsumerSettings(actorSystem, avroDeserializer, avroDeserializer)
+      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+      .withGroupId("kafka-image-binary-processor")
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+  }
+
+  private val writerSchema: Schema = {
+    val writerSchemaFile = new File(getClass.getClassLoader.getResource("schemas/imageProcessed.avsc").getPath)
+    new Schema.Parser().parse(writerSchemaFile)
+  }
+  private val producerSettings = {
+    val avroSerializer = new KafkaAvroSerializer(schemaRegistryClient)
+    ProducerSettings(actorSystem, avroSerializer, avroSerializer)
+      .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
+  }
+
+
 
 }
 
