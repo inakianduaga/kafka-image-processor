@@ -20,13 +20,25 @@
     {
       "name": "filter",
       "type": {
-          "type": "enum",
-          "name": "filters",
-          "symbols": [
-            "GREYSCALE",
-            "HALFTONE",
-            "CHROME"
-          ]
+        "type": "enum",
+        "name": "filters",
+        "symbols": [
+          "GREYSCALE",
+          "CHROME",
+          "HALFTONE",
+          "BLUR",
+          "DIFFUSE",
+          "CONTOUR",
+          "EDGE",
+          "OIL",
+          "ROBERTS",
+          "SUMMER",
+          "TRITONE",
+          "SOLARIZE",
+          "TELEVISION",
+          "VINTAGE",
+          "INVERT"
+        ]
       },
       "doc": "The filter to apply to this image",
       "default": "GREYSCALE"

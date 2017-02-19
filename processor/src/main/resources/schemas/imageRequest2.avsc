@@ -24,8 +24,20 @@
           "name": "filters",
           "symbols": [
             "GREYSCALE",
+            "CHROME",
             "HALFTONE",
-            "CHROME"
+            "BLUR",
+            "DIFFUSE",
+            "CONTOUR",
+            "EDGE",
+            "OIL",
+            "ROBERTS",
+            "SUMMER",
+            "TRITONE",
+            "SOLARIZE",
+            "TELEVISION",
+            "VINTAGE",
+            "INVERT"
           ]
       },
       "doc": "The filter to apply to this image",
