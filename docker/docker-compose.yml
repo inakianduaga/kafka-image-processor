@@ -75,6 +75,7 @@ services:
   ui-backend:
     ports:
       - "9000:9000"
+      - "5005:5005"
     build: ./sbt
     image: sbt
     links:
@@ -89,6 +90,7 @@ services:
       - SCHEMA_REGISTRY_ENDPOINT=schema-registry:8081
     entrypoint:
       - sbt
+      - "-jvm-debug 5005"
       - run
     stdin_open: true
 
