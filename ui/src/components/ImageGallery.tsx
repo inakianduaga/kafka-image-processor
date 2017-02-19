@@ -31,14 +31,14 @@ const ImageGallery = ({imageClock$}: ISources): ISinks => {
     <div>
       {
         urls.map(url =>
-          <img src={url} style={{ border: "1px solid #ddd" }} height={IMAGE_SIZE} width={IMAGE_SIZE}/>
+          <img src={url} style={{ border: '1px solid #ddd' }} height={IMAGE_SIZE} width={IMAGE_SIZE}/>
         )
       }
     </div>
   );
 
   const imageGallery$ = imageTags$.map(tags =>
-    <div className="col col-xs-12 mb-1">
+    <div className='col col-xs-12 mb-1'>
       <h4>Image Stream...</h4>
       <div>
         { tags }

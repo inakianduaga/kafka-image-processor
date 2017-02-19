@@ -8,7 +8,7 @@ type ISources = {
     DOM: DOMSource,
 };
 
-export type IFilter = "GRAYSCALE" | "HALFTONE" | "CHROME";
+export type IFilter = 'GREYSCALE' | 'HALFTONE' | 'CHROME';
 
 export type IFilterSelection = IFilter | null;
 
@@ -18,26 +18,44 @@ export type ISinks = {
 }
 
 
-const FrequencyControl = (sources: ISources): ISinks =>{
+const FrequencyControl = (sources: ISources): ISinks => {
 
     const filterSelection$ = sources
         .DOM
         .select('#filterSelection')
         .events('change')
-        .map(event => (event.target as HTMLSelectElement).value as IFilterSelection)
+        .map(event => {
+            const selection = (event.target as HTMLSelectElement).value
+            return selection === 'UNSET' ? null : selection as IFilterSelection
+        })
         .startWith(null)
 
-    const filters: IFilter[] = ["GRAYSCALE", "HALFTONE", "CHROME"];
+    const filters: IFilter[] = [
+        'GREYSCALE',
+        'HALFTONE',
+        'CHROME'
+    ];
 
     const filterSelectionControl$ = filterSelection$.map(selected =>
-        <div className="col col-xs-12 mb-1">
+        <div className='col col-xs-12 mb-1'>
             <h5>Filter Selection</h5>
-            <select name="filterSelection" id="filterSelection">
-                <option value={ undefined } selected={selected == null ? true : undefined } style={{ textTransform: "capitalize" }}>UNSET</option>
-                <optgroup label="Available:">
+            <select name='filterSelection' id='filterSelection'>
+                <option
+                    value={ undefined }
+                    selected={selected == null ? true : undefined}
+                    style={{ textTransform: 'capitalize' }}>
+                    UNSET
+                </option>
+                <optgroup label='Available:'>
                     {
-                        filters.map(name => 
-                            <option value={ name } selected={name === selected ? true : undefined } style={{ textTransform: "capitalize" }}>{ name }</option>
+                        filters.map(name =>
+                            <option
+                                value={name}
+                                selected={name === selected ? true : undefined}
+                                style={{ textTransform: 'capitalize' }}
+                            >
+                                {name}
+                            </option>
                         )
                     }
                 </optgroup>

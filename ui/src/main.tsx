@@ -21,11 +21,11 @@ export type ISinks = {
 
 export default function Main({DOM, WEBSOCKET}: ISources): ISinks {
 
-  const { DOM: processingControl$, PROCESSING: processing$} = ProcessingControl({DOM});
+  const { DOM: processingControl$, PROCESSING: processing$} = ProcessingControl({ DOM });
   const { DOM: imageFrequencyControl$, CLOCK: imageClock$} = FrequencyControl({DOM, PROCESSING: processing$});
   const { DOM: imageGallery$, IMAGE_URLS: imageUrls$ } = ImageGallery({imageClock$});
   const { DOM: clientStats$} = ClientStats({imageUrls$});
-  const { DOM: serverResults$ } = ServerResults({WEBSOCKET});
+  const { DOM: serverResults$ } = ServerResults({ WEBSOCKET });
   const { DOM: filterSelectionControl$, FILTER: filter$} = FilterSelection({DOM});
 
   const imageUrlsJsoned$ = xs

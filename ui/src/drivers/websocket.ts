@@ -7,8 +7,6 @@ export type ICycleJSTwoWayDriver = (outgoing$: Stream<Event>) => Stream<any>;
 
 /**
  * https://cycle.js.org/drivers.html
- *
- * This wrapper function will return a CycleJS driver, which
  */
 function makeWebSocketDriver(hostnameAndPort: string): ICycleJSTwoWayDriver {
 
@@ -23,14 +21,14 @@ function makeWebSocketDriver(hostnameAndPort: string): ICycleJSTwoWayDriver {
     // Register event listener on input stream that will push it through the websocket
     outgoing$.addListener({
       next: outgoing => {
-        if(ws.readyState === 1) {
+        if (ws.readyState === 1) {
           ws.send(outgoing);
         } else {
           queue.push(outgoing);
         }
       },
-      error: () => {},
-      complete: () => {},
+      error: () => { /**/ },
+      complete: () => { /**/ },
     });
 
     // Create a stream source that we will be able to register to that emits every time
@@ -41,8 +39,7 @@ function makeWebSocketDriver(hostnameAndPort: string): ICycleJSTwoWayDriver {
         ws.onerror = (err: Event) => listener.error(err);
         ws.onclose = () => listener.complete();
       },
-      stop: () => {
-      },
+      stop: () => { /**/ },
     });
   }
 
