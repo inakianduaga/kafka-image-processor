@@ -2,7 +2,7 @@ import xs, {Stream, MemoryStream} from 'xstream';
 import {VNode, CycleDOMEvent} from '@cycle/dom';
 import {DOMSource} from '@cycle/dom/xstream-typings';
 const {html} = require('snabbdom-jsx');
-import Config from '../services/Config';
+import Config from '../../services/Config';
 
 type ISources = {
     DOM: DOMSource,

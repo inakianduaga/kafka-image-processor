@@ -1,7 +1,7 @@
 import xs, {Stream} from 'xstream';
 import {VNode} from '@cycle/dom';
 const {html} = require('snabbdom-jsx');
-import Config from '../services/Config';
+import Config from '../../services/Config';
 
 export type ISources = {
   imageUrls$: Stream<string>,
