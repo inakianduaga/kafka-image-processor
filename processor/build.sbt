@@ -23,14 +23,3 @@ mainClass in Compile := Some("com.inakianduaga.Kafka")
 // Avro serializer/deserializer
 resolvers += "confluent" at "http://packages.confluent.io/maven/"
 libraryDependencies += "io.confluent" % "kafka-avro-serializer" % "3.1.2"
-
-// Sbt revolver for autoreloading
-//resolvers += "spray repo" at "http://repo.spray.io"
-//mainClass in reStart := Some("com.inakianduaga.Kafka")
-
-// set the main Scala source directory to be <base>/src
-//scalaSource in Compile <<= baseDirectory(_ / "src")
-
-// set the main class for the main 'run' task
-// change Compile to Test to set it for 'test:run'
-//mainClass in (Compile, run) := Some("com.inakianduaga.Kafka")
