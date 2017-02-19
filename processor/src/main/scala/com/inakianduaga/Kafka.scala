@@ -7,7 +7,7 @@ import akka.kafka._
 import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.ActorMaterializer
 import com.inakianduaga.deserializers.ImageRequestDeserializer
-import com.inakianduaga.models.{ImageProcessed, ImageRequest2}
+import com.inakianduaga.models.{ImageProcessed, ImageRequest2, Png}
 import com.inakianduaga.services.HttpClient.{get => httpGet}
 import com.sksamuel.{scrimage => ImgLib}
 import com.typesafe.config.ConfigFactory
@@ -33,18 +33,14 @@ object Kafka {
       )
       .filter(data => data.container.status == 200)
       .map(data => {
-        println("downloaded image and now ready to process it further...")
         val stream = new ByteArrayInputStream(data.container.bodyAsBytes)
         val img = ImgLib.Image.fromStream(stream)
         val filter = data.imageRequest.filter.filter
-        val imageProcessed = ImageProcessed(img.filter(filter).bytes, data.imageRequest.id ,Some("JPEG"))
+        val imageProcessed = ImageProcessed(img.filter(filter).bytes, data.imageRequest.id , Some(Png))
         val producerRecord = new ProducerRecord[Object, Object]("Images.Processed", imageProcessed.toAvroRecord(writerSchema))
         ProducerMessage.Message(producerRecord, data.commitableOffset)
       })
       .runWith(Producer.commitableSink(producerSettings))
-      .onFailure {
-        case t: Throwable => s"There was an exception: ${t.getMessage}"
-      }
 
   case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageRequest: ImageRequest2, container: T)
 
