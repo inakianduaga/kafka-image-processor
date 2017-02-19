@@ -1,0 +1,166 @@
+#
+# Docker Compose to wire up all containers for local development
+# https://docs.docker.com/compose/compose-file/
+#
+# Based on the confluent platform:
+# https://github.com/confluentinc/cp-docker-images/blob/3.1.x/examples/cp-all-in-one/docker-compose.yml
+#
+---
+version: '2'
+services:
+
+  #===============
+  # Core Services
+  #===============
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: always
+  broker:
+    image: confluentinc/cp-kafka
+    hostname: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:9092'
+    restart: always
+  schema-registry:
+    image: confluentinc/cp-schema-registry
+    hostname: schema_registry
+    depends_on:
+      - zookeeper
+      - broker
+    links:
+      - zookeeper
+      - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema_registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+      SCHEMA_REGISTRY_access_control_allow_methods: 'GET,POST,OPTIONS'
+      SCHEMA_REGISTRY_access_control_allow_origin: '*'
+      # Additional options:
+      # SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL=NONE | FULL | FORWARD | BACKWARD
+
+  #===============
+  # Applications
+  #===============
+
+  ui:
+    build: ./node
+    image: node
+    ports:
+      - 3000:3000
+    links:
+      - ui-backend
+    volumes:
+      - ../ui:/app
+    environment:
+      - BACKEND_ENDPOINT=localhost:9000
+    entrypoint:
+      - npm
+      - start
+
+  ui-backend:
+    ports:
+      - "9000:9000"
+      - "5005:5005"
+    build: ./sbt
+    image: sbt
+    links:
+      - broker
+      - schema-registry
+    depends_on:
+      - broker
+    volumes:
+      - ../ui-backend:/root
+    environment:
+      - KAFKA_ENDPOINT=broker:9092
+      - SCHEMA_REGISTRY_ENDPOINT=schema-registry:8081
+    entrypoint:
+      - sbt
+      - "-jvm-debug 5005"
+      - run
+    stdin_open: true
+
+  processor:
+    build: ./sbt
+    image: sbt
+    links:
+      - broker
+      - zookeeper
+      - schema-registry
+    depends_on:
+      - broker
+      - zookeeper
+      - schema-registry
+      - ui
+    volumes:
+      - ../processor:/root
+    environment:
+      - KAFKA_ENDPOINT=broker:9092
+      - SCHEMA_REGISTRY_ENDPOINT=schema-registry:8081
+      - ZOOKEEPER_ENDPOINT=zookeeper:2181
+    entrypoint:
+      - sbt
+      - run
+    stdin_open: true
+    restart: always
+
+  # =============
+  # Rest proxies
+  # =============
+
+  kafka-rest-proxy:
+    image: confluent/rest-proxy
+    ports:
+      - 8082:8082
+    links:
+      - zookeeper
+      - broker
+      - schema-registry
+    depends_on:
+      - schema-registry
+      - broker
+      - zookeeper
+
+  # ================
+  # Debugging UI visualization
+  # ================
+
+  schema-registry-ui:
+    image: landoop/schema-registry-ui
+    ports:
+      - 8083:8000
+    environment:
+      - SCHEMAREGISTRY_URL=http://localhost:8081
+    links:
+      - schema-registry
+    depends_on:
+      - schema-registry
+    restart: always
+
+  kafka-topics-ui:
+    image: landoop/kafka-topics-ui
+    ports:
+      - 8084:8000
+    environment:
+      - KAFKA_REST_PROXY_URL=http://kafka-rest-proxy:8082
+      - PROXY=true
+    links:
+      - kafka-rest-proxy
+    depends_on:
+      - kafka-rest-proxy
+
+

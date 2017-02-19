@@ -1,0 +1,47 @@
+{
+  "namespace": "inakianduaga.kafkaImageProcessor",
+  "type": "record",
+  "name": "ImageRequest",
+  "doc": "Image processing request",
+  "fields": [
+    {
+      "name": "url",
+      "type": "string",
+      "doc": "The image location",
+      "aliases": [
+        "downloadUrl"
+      ]
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "The id of this processing request"
+    },
+    {
+      "name": "filter",
+      "type": {
+          "type": "enum",
+          "name": "filters",
+          "symbols": [
+            "GREYSCALE",
+            "CHROME",
+            "HALFTONE",
+            "BLUR",
+            "DIFFUSE",
+            "CONTOUR",
+            "EDGE",
+            "OIL",
+            "ROBERTS",
+            "SUMMER",
+            "TRITONE",
+            "SOLARIZE",
+            "TELEVISION",
+            "VINTAGE",
+            "INVERT"
+          ]
+      },
+      "doc": "The filter to apply to this image",
+      "default": "GREYSCALE"
+    }
+  ]
+}

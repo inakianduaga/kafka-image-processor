@@ -12,7 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     // "noUnusedLocals": true, // Disable because of the snabdom requires
     "allowUnusedLabels": false,
-    "noUnusedParameters": true,
+    // "noUnusedParameters": true,
     "module": "commonjs",
     "jsx": "preserve",
     "target": "es2015",

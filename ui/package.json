@@ -25,13 +25,12 @@
   "dependencies": {
     "@cycle/dom": "^12.2.5",
     "@cycle/xstream-run": "^3.1.0",
-    "cycle-socket.io": "^3.0.1",
     "xstream": "^6.4.1"
   },
   "devDependencies": {
     "@types/node": "^6.0.45",
     "@types/react": "^0.14.41",
-    "awesome-typescript-loader": "^2.2.4",
+    "awesome-typescript-loader": "3.0.0-beta.10",
     "babel-core": "^6.17.0",
     "babel-loader": "^6.2.5",
     "babel-plugin-syntax-jsx": "^6.13.0",
@@ -48,12 +47,13 @@
     "snabbdom-jsx": "^0.3.1",
     "tslint": "^3.15.1",
     "tslint-loader": "^2.1.5",
-    "typescript": "^2.0.3",
+    "typescript": "2.1.4",
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.2"
   },
   "scripts": {
-    "start": "node ./node_modules/.bin/webpack-dev-server --hot --inline",
+    "prestart": "npm install",
+    "start": "node ./node_modules/.bin/webpack-dev-server --hot --inline --port 3000 --host=0.0.0.0",
     "clean": "rimraf build",
     "build:webpack": "NODE_ENV=production node ./node_modules/webpack/bin/webpack.js --config webpack.prod.js --progress --colors --bail",
     "build": "npm run clean && npm run build:webpack && npm run build:testSuite",
