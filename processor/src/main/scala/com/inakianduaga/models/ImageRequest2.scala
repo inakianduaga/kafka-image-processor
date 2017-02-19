@@ -1,21 +1,30 @@
 package com.inakianduaga.models
 
 import com.sksamuel.{scrimage => ImgLib}
-import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.generic.GenericRecord
+import org.apache.avro.util.Utf8
 
 case class ImageRequest2(url: String, id: String, filter: Filter) {}
 
 object ImageRequest2 {
-  def apply(record: IndexedRecord): ImageRequest2 =
+
+  def apply(record: GenericRecord): ImageRequest2 = {
+    println("building imageRequest2")
+    println(s"The Schema fields are ${record.getSchema.getFields.toString} - Length: ${record.getSchema.getFields.size()}")
+    println(s"The url is: ${record.get("url").asInstanceOf[Utf8].toString}")
+    println(s"The id is: ${record.get("id").asInstanceOf[Utf8].toString}")
+    println(s"The filter is: ${record.get("filter").asInstanceOf[Utf8].toString}")
     ImageRequest2(
-      url = record.get(record.getSchema.getField("downloadUrl").pos()).asInstanceOf[String],
-      id = record.get(record.getSchema.getField("id").pos()).asInstanceOf[String],
-      filter = record.get(record.getSchema.getField("filter").pos()).asInstanceOf[String] match {
+      url = record.get("url").asInstanceOf[Utf8].toString,
+      id = record.get("id").asInstanceOf[Utf8].toString,
+      filter = record.get("filter").asInstanceOf[Utf8].toString match {
         case "GREYSCALE" => FilterGreyscale
         case "CHROME" => FilterChrome
         case "HALFTONE" => FilterHalftone
       }
     )
+  }
+
 }
 
 sealed trait Filter {

@@ -21,6 +21,7 @@ import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializ
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Properties
+import scala.util.Try
 
 class Kafka {
 }
@@ -68,8 +69,9 @@ object Kafka {
     import io.confluent.kafka.serializers.KafkaAvroSerializer
     import org.apache.avro.Schema
     import org.apache.avro.generic.IndexedRecord
+    import org.apache.avro.generic.GenericRecord
 
-    // Aktor System
+    // Actor System
     val config = ConfigFactory.load()
     implicit val system = ActorSystem.create("kafka-image-processor", config)
     implicit val mat = ActorMaterializer()
@@ -106,13 +108,25 @@ object Kafka {
     }
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
-      .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[IndexedRecord]), None))
+        .map(message => {
+          println("received message!")
+          message
+        })
+      .map(message => {
+        val record = Try {
+          ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[GenericRecord]), None)
+        }
+
+        if(record.isFailure) println(s"Exception!: ${ record.failed.get.getMessage } || ${ record.failed.get.getStackTrace }")
+        record.get
+      })
       .mapAsync(1)(data =>
-        httpGet(data.imageRequest.url).map(response => data.copy(holder = response))
+        httpGet(data.imageRequest.url).map(response => data.copy(container = response))
       )
-      .filter(data => data.holder.status == 200)
+      .filter(data => data.container.status == 200)
       .map(data => {
-        val stream = new ByteArrayInputStream(data.holder.bodyAsBytes)
+        println("downloaded image and now ready to process it further...")
+        val stream = new ByteArrayInputStream(data.container.bodyAsBytes)
         val img = ImgLib.Image.fromStream(stream)
         val filter = data.imageRequest.filter.filter
         val imageProcessed = ImageProcessed(img.filter(filter).bytes, data.imageRequest.id ,Some("JPEG"))
@@ -120,9 +134,12 @@ object Kafka {
         ProducerMessage.Message(producerRecord, data.commitableOffset)
       })
       .runWith(Producer.commitableSink(producerSettings))
+      .onFailure {
+        case t: Throwable => s"There was an exception: t.getMessage"
+      }
   }
 
-  case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageRequest: ImageRequest2,  holder: T)
+  case class ImageRecordData[T](commitableOffset: ConsumerMessage.CommittableOffset, imageRequest: ImageRequest2, container: T)
 
 }
 
