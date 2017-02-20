@@ -1,10 +1,10 @@
-Kafka Image Processor [WIP]
-===========================
+Kafka Image Processor 
+=====================
 
-> [WIP] Small image processing demo to test Kafka integration in a full frontend/backend application
+> Small image processing demo to test Kafka (w/ Avro) integration in a full frontend/backend application
 
-The idea is to an integration of Kafka in a minimal but realistic environment, where there is a client/backend pair handling requests and interacting with Kafka, 
-and additional backends doing processing over the Kafka streams
+A Kafka integration in a minimal but "realistic" environment, where there is a client/backend pair handling requests and interacting with Kafka, 
+and additional backends doing processing over the Kafka streams. The kafka data is saved in Avro format
 
 ## Installation
 
