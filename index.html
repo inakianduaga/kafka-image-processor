@@ -73,70 +73,71 @@
         >
             <script type="text/template">
 
-                # Kafka & Avro
+# Kafka & Avro
 
-                ### Integrating Avro w/ Kafka...
+### Integrating Avro w/ Kafka...
 
-                [Github Repo](https://github.com/inakianduaga/kafka-image-processor) <!-- {_class="small"} -->
+[Github Repo](https://github.com/inakianduaga/kafka-image-processor) <!-- {_class="small"} -->
 
-                ---
+---
 
-                ## What is Avro
+## What is Avro
 
-                - Avro is a data format
-                <li class="fragment">Needs *Schema* to read *Record*
-                    <span class="fragment">(!= than *ProtoBuffers* or *JSON*)</span>
-                </li>
+- Avro is a data format
+<li class="fragment">Needs *Schema* to read *Record*
+    <span class="fragment">(!= than *ProtoBuffers* or *JSON*)</span>
+</li>
 
-                - Records can be stored in binary format or json <!-- {_class="fragment"} -->
+- Records can be stored in binary format or json <!-- {_class="fragment"} -->
 
-                ---
+---
 
-                Schemas can be written in IDL or JSON:
-                ```json
-                {
-                "namespace": "inakianduaga.kafkaImageProcessor",
-                "type": "record",
-                "name": "ImageProcessed",
-                "doc": "Image processing response",
-                "fields": [
-                {
-                "name": "content",
-                "type": "bytes",
-                "doc": "The processed image binary"
-                },
-                {
-                "name": "format",
-                "type": {
-                "type": "enum",
-                "name": "formats",
-                "symbols": [
-                "JPEG",
-                "PNG",
-                "GIF"
-                ]
-                },
-                "doc": "The format of the image binary",
-                "default": "JPEG"
-                }
-                ]
-                }
-                ```
+Schemas can be written in IDL or JSON:
+```json
+    {
+      "namespace": "inakianduaga.kafkaImageProcessor", 
+      "type": "record",
+      "name": "ImageProcessed",
+      "doc": "Image processing response",
+      "fields": [
+        {
+          "name": "content",
+          "type": "bytes",
+          "doc": "The processed image binary"
+        },
+        {
+          "name": "format",
+          "type": {
+            "type": "enum",
+            "name": "formats",
+            "symbols": [
+              "JPEG",
+              "PNG",
+              "GIF"
+            ]
+          },
+          "doc": "The format of the image binary",
+          "default": "JPEG"
+        }
+      ]
+    }
+```
 
-                ---
+---
 
-                ## Avro advantages
-                - Smaller filesize
-                - Faster encoding/decoding ???
-                - Schema evolution
-                - Avro clients provide automatic validation against schema (so no corrupt data)
+## Avro advantages
+- Smaller filesize
+- Faster encoding/decoding ???
+- Schema evolution
+- Avro clients provide automatic validation against schema (so no corrupt data)
 
-                ---
+---
 
-                ## Schema
-                - Smaller files (schema is not part of file)
-                - Schema evolution (if schema is changed in a smart way, old clients can still read data as if nothing had happened)
-                - Avro clients provide automatic validation against schema (so no corrupt data)
+## Schema
+- Smaller files (schema is not part of file)
+- Schema evolution (if schema is changed in a smart way, old clients can still read data as if nothing had happened)
+- Avro clients provide automatic validation against schema (so no corrupt data)
+
 
             </script>
         </section>
