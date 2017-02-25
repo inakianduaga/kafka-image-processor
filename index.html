@@ -138,7 +138,21 @@ Schemas can be written in IDL or JSON:
 - Schema evolution (if schema is changed in a smart way, old clients can still read data as if nothing had happened)
 - Avro clients provide automatic validation against schema (so no corrupt data)
 
+https://github.com/julianpeeters/avrohugger/issues/23
+if you want everything to always work without always updating consumers or producers first, you need to guarantee full compatibility, which pretty much boils down to:
 
+- Backwards compatibility - Ensure that every new field has s default value
+- Forwards compatibility - Never remove a field that doesn't have a default value. This is the one most important to specific records.
+
+http://www.youtube.com/watch?v=GfJZ7duV_MM&t=20m0s
+
+## Avro deserialization
+
+Can generate classes automatically from Avro schemas (generic/specific records)
+
+```sh
+java -jar ~/Downloads/avrohugger-tools_2.11-0.15.0-assembly.jar generate-specific schema src/main/resources/schemas/imageRequest2.avsc .
+```
             </script>
         </section>
     </div>
