@@ -9,7 +9,7 @@ import scala.annotation.switch
  * @param id The id of this processing request
  * @param filter The filter to apply to this image
  */
-case class ImageRequest(var url: String, var id: String, var filter: filters = filters.GREYSCALE) extends org.apache.avro.specific.SpecificRecordBase {
+case class ImageRequest2Specific(var url: String, var id: String, var filter: filters = filters.GREYSCALE) extends org.apache.avro.specific.SpecificRecordBase {
   def this() = this("", "", filters.GREYSCALE)
   def get(field$: Int): AnyRef = {
     (field$: @switch) match {
@@ -40,9 +40,9 @@ case class ImageRequest(var url: String, var id: String, var filter: filters = f
     }
     ()
   }
-  def getSchema: org.apache.avro.Schema = ImageRequest.SCHEMA$
+  def getSchema: org.apache.avro.Schema = ImageRequest2Specific.SCHEMA$
 }
 
-object ImageRequest {
+object ImageRequest2Specific {
   val SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ImageRequest\",\"namespace\":\"inakianduaga.kafkaImageProcessor\",\"doc\":\"Image processing request\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"doc\":\"The image location\",\"aliases\":[\"downloadUrl\"]},{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The id of this processing request\"},{\"name\":\"filter\",\"type\":{\"type\":\"enum\",\"name\":\"filters\",\"symbols\":[\"GREYSCALE\",\"CHROME\",\"HALFTONE\",\"BLUR\",\"DIFFUSE\",\"CONTOUR\",\"EDGE\",\"OIL\",\"ROBERTS\",\"SUMMER\",\"TRITONE\",\"SOLARIZE\",\"TELEVISION\",\"VINTAGE\",\"INVERT\"]},\"doc\":\"The filter to apply to this image\",\"default\":\"GREYSCALE\"}]}")
 }

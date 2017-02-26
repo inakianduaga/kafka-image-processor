@@ -17,9 +17,10 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Properties, Try}
+import scala.util.Properties
+import com.inakianduaga.models.avroCompiled.ImageRequest2Specific
 
 object Kafka {
 
@@ -27,6 +28,13 @@ object Kafka {
 
   def run() =
     Consumer.committableSource(consumerSettings, Subscriptions.topics("Images.Urls"))
+//      .map(message => {
+//        Try {
+//          val imageRequest2Specific = message.record.value.asInstanceOf[ImageRequest2Specific]
+//          println(s"hydrated ImageRequest2Specific from record successfully. URL: ${imageRequest2Specific.url}")
+//        }.failed.foreach(t => println(s"There was an exception deserializing ImageRequest - ${t.getMessage} || ${t.printStackTrace()}"))
+//        message
+//      })
       .map(message => ImageRecordData(message.committableOffset, ImageRequest2(message.record.value.asInstanceOf[GenericRecord]), None))
       .mapAsync(1)(data =>
         httpGet(data.imageRequest.url).map(response => data.copy(container = response))
@@ -60,7 +68,13 @@ object Kafka {
     new Schema.Parser().parse(readerSchemaFile)
   }
   private val consumerSettings = {
-    val avroDeserializer = ImageRequestDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+    val avroDeserializer = {
+//      val avroDeserializerProps = new java.util.HashMap[String, String]()
+//      avroDeserializerProps.put("schema.registry.url", Properties.envOrElse("SCHEMA_REGISTRY_ENDPOINT", "localhost:8081"))
+//      avroDeserializerProps.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true")
+//      ImageRequestDeserializer(schemaRegistryClient, avroDeserializerProps).setReaderSchema(readerSchema)
+      ImageRequestDeserializer(schemaRegistryClient).setReaderSchema(readerSchema)
+    }
     ConsumerSettings(actorSystem, avroDeserializer, avroDeserializer)
       .withBootstrapServers(Properties.envOrElse("KAFKA_ENDPOINT", "localhost:9092"))
       .withGroupId("kafka-image-binary-processor")

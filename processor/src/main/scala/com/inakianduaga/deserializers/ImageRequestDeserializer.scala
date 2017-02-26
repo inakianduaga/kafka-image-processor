@@ -3,6 +3,7 @@ package com.inakianduaga.deserializers
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.apache.avro.Schema
+import java.util.{ HashMap => JavaHashMap}
 
 trait ImageRequestDeserializer extends KafkaAvroDeserializer {
 
@@ -22,4 +23,5 @@ trait ImageRequestDeserializer extends KafkaAvroDeserializer {
 
 object ImageRequestDeserializer {
   def apply(client: SchemaRegistryClient) = new KafkaAvroDeserializer(client) with ImageRequestDeserializer
+  def apply(client: SchemaRegistryClient, options: JavaHashMap[String, _]) = new KafkaAvroDeserializer(client, options) with ImageRequestDeserializer
 }
