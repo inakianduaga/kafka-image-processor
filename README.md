@@ -6,6 +6,14 @@ Kafka Image Processor
 A Kafka integration in a minimal but "realistic" environment, where there is a client/backend pair handling requests and interacting with Kafka, 
 and additional backends doing processing over the Kafka streams. The kafka data is saved in Avro format
 
+## Features
+
+- [x] CycleJS for reactive frontend
+- [x] Akka kafka streams integration 
+- [x] Avro integration
+- [x] Schema evolution example 
+- [ ] Avro serialization/deserialization using auto-generated case classes from Avro schemas 
+
 ## Installation
 
 All the services are dockerized and orchestrated through [docker-compose](./docker).

@@ -49,9 +49,13 @@
 
         .small, a.small {
             display: inline-block;
-            font-size: 0.6em;
+            font-size: 0.6em !important;
             line-height: 1.2em;
             vertical-align: top;
+        }
+
+        .smaller-text {
+            font-size: 0.8em !important;
         }
 
         .left-align {
@@ -116,7 +120,6 @@
     - Schema evolution <!-- {_class="fragment"} -->
     - Avro clients provide automatic validation against schema <!-- {_class="fragment"} -->
 
-
 ---
 
 ## Avro Schema
@@ -154,14 +157,29 @@ Can be written in IDL or JSON:
 
 ---
 
+## Avro Schema evolution
+
+If schemas are updated following evolution rules, we can ensure producer/consumer compatibility <!-- {_class="left-align"} -->
+
+<img class="plain fragment" src="./backwardsCompatibility.png" style="width: 30%; float:left;"/>
+<img class="plain fragment" src="./forwardCompatibility.png" style="width: 30%; float:left; margin-left: 5%; margin-right: 5%;"/>
+<img class="plain fragment" src="./mixedCompatibility.png" style="width: 30%; float:left;"/>
+<div style="clear: both; margin-bottom: 0.5em;"></div>
+
+<div class="smaller-text fragment left-align">Forward compatibility: <b>Avro ensures consumers can read all records in topic</b>.</div>
+
+---
+
 ## Schema Registry
 
 In Kafka context, we need an easy way to fetch Avro schemas. Schema registry provides: <!-- {_class="left-align"} -->
 
 - Automatic storing / fetching of schemas based on encoded id inside Kafka records <!-- {_class="fragment"} -->
-- Schema compatibility checks: <!-- {_class="fragment"} -->
-    - Backwards compatible: New schema can be used to read the data written in all previous schemas <!-- {_class="fragment"} -->
-    - Forwards compatible: All previous schemas can read data written by the new <!-- {_class="fragment"} -->
+- Documentation <!-- {_class="fragment"} -->
+- Automatic Schema compatibility checks: <!-- {_class="fragment"} -->
+    - Backwards compatible
+    - Forwards compatible
+    - Fully compatible
 
 <!--
     Notes:
@@ -238,7 +256,13 @@ Random image processor
     </li>
 </ol>
 
+---
 
+## Technical challenges encountered:
+
+- Deserialization using different reader schema -> [Need custom class](./processor/src/main/scala/com/inakianduaga/deserializers/ImageRequestDeserializer.scala)
+- Deserialization into Avro-generated case classes: [Documentation sucks](http://docs.confluent.io/3.1.1/schema-registry/docs/serializer-formatter.html#serializer)
+- Schema registry: Doesn't like renaming fields [(not a valid evolution)(https://groups.google.com/forum/#!topic/confluent-platform/0NlrxFD5FHk)].
 
 ---
 
