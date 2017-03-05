@@ -62,6 +62,9 @@
             text-align: left;
         }
 
+        li > p {
+            margin-bottom: 0 !important;
+        }
         li {
             margin-top: 0.3em !important;
             margin-bottom: 0.3em !important;
@@ -102,18 +105,18 @@
 
 ### Exploring Avro as a Kafka data format...
 
-[Github Repo](https://github.com/inakianduaga/kafka-image-processor) <!-- {_class="small"} -->
+[Github](https://github.com/inakianduaga/kafka-image-processor) <!-- {_class="small"} -->
 
 ---
 
 ## What is Avro
 
-- Avro is a data format
-<li class="fragment">**Schema separate from Record** (i.e. need schema to read record)
-    <span class="fragment">(!= than *ProtoBuffers* or *JSON*)</span>
+- [Avro](https://avro.apache.org/docs/1.8.1/index.html) is a data serialization system
+<li class="fragment">**Schema stored separate from Record** (i.e. need schema to read record)
+    <span class="fragment">(unlike *ProtoBuffers* or *JSON*)</span>
 </li>
 
-- Records can be stored in binary format or json <!-- {_class="fragment"} -->
+- Records stored using binary encoding or JSON <!-- {_class="fragment"} -->
 
 - Avro advantages: <!-- {_class="fragment"} -->
     - Smaller filesize (vs JSON) <!-- {_class="fragment"} -->
@@ -124,7 +127,8 @@
 
 ## Avro Schema
 
-Can be written in IDL or JSON:
+Can be written in [IDL](https://avro.apache.org/docs/1.8.1/idl.html) or JSON:
+
 ```json
     {
       "namespace": "inakianduaga.kafkaImageProcessor", 
@@ -174,12 +178,28 @@ If schemas are updated following evolution rules, we can ensure producer/consume
 
 In Kafka context, we need an easy way to fetch Avro schemas. Schema registry provides: <!-- {_class="left-align"} -->
 
-- Automatic storing / fetching of schemas based on encoded id inside Kafka records <!-- {_class="fragment"} -->
-- Documentation <!-- {_class="fragment"} -->
-- Automatic Schema compatibility checks: <!-- {_class="fragment"} -->
-    - Backwards compatible
-    - Forwards compatible
-    - Fully compatible
+<ul>
+    <li class="fragment">
+        Automatic storing / fetching of schemas based on [encoded id inside Kafka record](https://github.com/confluentinc/schema-registry/blob/master/docs/serializer-formatter.rst#wire-format)
+    </li>
+    <li class="fragment">
+        Documentation
+    </li>
+    <li class="fragment">
+        Automatic Schema compatibility checks:
+        <ul>
+            <li>
+                Backwards compatible
+            </li>
+            <li>
+                Forwards compatible
+            </li>
+            <li>
+                Fully compatible
+            </li>
+        </ul>
+    </li>
+</ul>
 
 <!--
     Notes:
@@ -206,7 +226,7 @@ We need: <!-- {_class="left-align"} -->
 Random image processor
     <ul>
         <li class="fragment">
-        <b>Core</b>: Zookeeper/Kafka/Schema Registry
+            <b>Core</b>: Zookeeper/Kafka/Schema Registry
         </li>
         <li class="fragment">
             <b>Distributed services</b>: UI / UI-Backend / Image Processor
@@ -220,7 +240,6 @@ Random image processor
     </ul>
 </div>
 
-
 ---
 
 ## Run POC
@@ -231,18 +250,20 @@ Random image processor
     </li>
     <li class="fragment">
         Start up services: ```docker-compose up```
-    </li>
-    <li class="fragment">
-        Run  default-filter [request](http://localhost:3000/)
         <ul>
             <li>
-                [Check topics](http://localhost:8084): 2 topics
+                [Client](http://localhost:3000/), [Kafka Topics](http://localhost:8084), [Schema Registry](http://localhost:8083)
+            </li>
+        </ul>
+    </li>
+    <li class="fragment">
+        Run default-filter [request](http://localhost:3000/)
+        <ul>
+            <li>
+                Topics: 2, Schemas: 2
             </li>
             <li>
-                [Schema registry UI](http://localhost:8083): 2 schemas
-            </li>
-            <li>
-                <b>Schema evolution</b>: Processor service is reading with V2 schema, data written in V1 schema
+                <b>Schema evolution</b>: request written in V1 schema, processor service reading with V2 schema
             </li>
         </ul>
     </li>
@@ -250,7 +271,7 @@ Random image processor
         Run custom-filter request
         <ul>
             <li>
-                <b>Upgraded schema</b>: UI-backend produces data in V2 schema, matching Processor's read
+                <b>Upgraded schema</b>: request written in V2 schema, processor reading w/ V2 schema
             </li>
         </ul>
     </li>
@@ -258,17 +279,41 @@ Random image processor
 
 ---
 
-## Technical challenges encountered:
+### Technical challenges encountered:
 
-- Deserialization using different reader schema -> [Need custom class](./processor/src/main/scala/com/inakianduaga/deserializers/ImageRequestDeserializer.scala)
-- Deserialization into Avro-generated case classes: [Documentation sucks](http://docs.confluent.io/3.1.1/schema-registry/docs/serializer-formatter.html#serializer)
-- Schema registry: Doesn't like renaming fields [(not a valid evolution)(https://groups.google.com/forum/#!topic/confluent-platform/0NlrxFD5FHk)].
+- Deserialization:
+  - using different reader schema: [Need custom class](https://github.com/inakianduaga/kafka-image-processor/blob/master/processor/src/main/scala/com/inakianduaga/deserializers/ImageRequestDeserializer.scala)
+  - into Avro-generated case classes: [Documentation sucks](http://docs.confluent.io/3.1.1/schema-registry/docs/serializer-formatter.html#serializer)
+- Schema registry:
+  - Renaming fields [not a valid evolution](https://groups.google.com/forum/#!topic/confluent-platform/0NlrxFD5FHk).
+
+---
+
+## Is it worth it?
+
+- Pros: <!-- {_class="fragment"} -->
+    - **Consumer safety**: knowing topic data structure is safe forever (schema registry forward compatibility)
+    - **Documentation**: Schema registry provides unified place to see structure of all Kafka topics
+    - **Schema evolution**: reduces number of breaking changes (i.e. requiring new topics)
+    - Storage savings
+- Cons: <!-- {_class="fragment"} -->
+    - Documentation lacking overall, hard to find example / answers
+    - Avro mostly used in the Hadoop context / Big data
 
 ---
 
 ## References:
 
-- [StrataConf 2015 Video](http://www.youtube.com/watch?v=GfJZ7duV_MM&t=20m0s)
+- Docs:
+  - [Avro spec](http://avro.apache.org/docs/1.8.1/spec.html#binary_encoding)
+  - [Avro schema evolution rules](https://docs.oracle.com/cd/E26161_02/html/GettingStartedGuide/schemaevolution.html)
+  - [Avro format overview](http://www.youtube.com/watch?v=GfJZ7duV_MM&t=20m0s)
+  - [Avro getting started](https://avro.apache.org/docs/1.8.1/gettingstartedjava.html)
+  - [Schema registry & Kafka integration docs](http://docs.confluent.io/3.1.1/schema-registry/docs/serializer-formatter.html)
+
+- Tooling:
+  - [Confluent Platform docker images](https://github.com/confluentinc/cp-docker-images)
+  - [Kafka UI helpers](http://www.landoop.com/)
 
             </script>
         </section>
